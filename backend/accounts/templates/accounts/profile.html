@@ -1,0 +1,42 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+    <h2>My Profile</h2>
+    <hr>
+    
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="30%"><strong>Username:</strong></td>
+            <td>{{ user.username }}</td>
+        </tr>
+        <tr>
+            <td><strong>Email:</strong></td>
+            <td>{{ user.email }}</td>
+        </tr>
+        <tr>
+            <td><strong>Role:</strong></td>
+            <td>{{ user.profile.get_role_display }}</td>
+        </tr>
+        <tr>
+            <td><strong>Phone:</strong></td>
+            <td>{{ user.profile.phone|default:"Not provided" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Company:</strong></td>
+            <td>{{ user.profile.company|default:"Not provided" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Member Since:</strong></td>
+            <td>{{ user.date_joined|date:"F d, Y" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Last Login:</strong></td>
+            <td>{{ user.last_login|date:"F d, Y H:i" }}</td>
+        </tr>
+    </table>
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

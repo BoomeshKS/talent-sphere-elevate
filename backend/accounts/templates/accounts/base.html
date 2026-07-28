@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TalentSphere - {% block title %}ATS System{% endblock %}</title>
+</head>
+<body>
+    <header>
+        <nav style="background-color: #f8f9fa; padding: 10px; border-bottom: 2px solid #dee2e6;">
+            <table width="100%">
+                <tr>
+                    <td>
+                        <h1 style="margin: 0; color: #2c3e50;">TalentSphere</h1>
+                        <small>AI-Powered Recruitment & ATS</small>
+                    </td>
+                    <td align="right">
+                        {% if user.is_authenticated %}
+                            <span style="font-weight: bold;">Welcome, {{ user.username }}</span>
+                            <span style="background: #007bff; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                                {{ user.profile.get_role_display }}
+                            </span>
+                            <a href="{% url 'dashboard' %}" style="margin-left: 15px;">Dashboard</a>
+                            <a href="{% url 'profile' %}" style="margin-left: 10px;">Profile</a>
+                            <a href="{% url 'logout' %}" style="margin-left: 10px;">Logout</a>
+                        {% else %}
+                            <a href="{% url 'login' %}">Login</a>
+                            <a href="{% url 'register' %}" style="margin-left: 10px;">Register</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </nav>
+    </header>
+
+    <main style="padding: 20px; min-height: 70vh;">
+        {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for message in messages %}
+                    <div style="padding: 10px; border: 1px solid; margin-bottom: 5px; 
+                                {% if message.tags == 'error' %}background-color: #f8d7da; border-color: #f5c6cb; color: #721c24;
+                                {% elif message.tags == 'success' %}background-color: #d4edda; border-color: #c3e6cb; color: #155724;
+                                {% else %}background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer style="background-color: #f8f9fa; padding: 15px; border-top: 2px solid #dee2e6; text-align: center; margin-top: 20px;">
+        <p style="margin: 0;">TalentSphere - AI-Powered Recruitment & Applicant Tracking System</p>
+        <small>2024 All Rights Reserved</small>
+    </footer>
+</body>
+</html>

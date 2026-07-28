@@ -1,0 +1,88 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td align="center">
+                <table width="450" style="border: 1px solid #ccc; padding: 20px; background-color: #f9f9f9;">
+                    <tr>
+                        <td>
+                            <h2 style="text-align: center; color: #2c3e50;">Create Account</h2>
+                            <hr>
+                            
+                            <form method="POST">
+                                {% csrf_token %}
+                                <table width="100%">
+                                    <tr>
+                                        <td><label><strong>Username:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" name="username" required style="width: 100%; padding: 8px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label><strong>Email:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="email" name="email" required style="width: 100%; padding: 8px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label><strong>Password:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="password" name="password" required style="width: 100%; padding: 8px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label><strong>Confirm Password:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="password" name="password2" required style="width: 100%; padding: 8px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label><strong>Register as:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <select name="role" style="width: 100%; padding: 8px;">
+                                                <option value="candidate">Candidate</option>
+                                                <option value="recruiter">Recruiter</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center">
+                                            <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
+                                                Register
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+                            
+                            <hr>
+                            <p style="text-align: center;">
+                                Already have an account? <a href="{% url 'login' %}">Login here</a>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Candidate Dashboard{% endblock %}
+
+{% block content %}
+    <h2>Candidate Dashboard</h2>
+    <p style="color: #6c757d;">Welcome, <strong>{{ user.username }}</strong>!</p>
+    <p><strong>Role:</strong> {{ user.profile.get_role_display }}</p>
+    
+    <hr>
+    
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="25%">
+                <div style="background-color: #17a2b8; color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                    <h3 style="margin: 0;">{{ total_applications }}</h3>
+                    <p style="margin: 5px 0 0;">Applications</p>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #ffc107; color: #333; padding: 20px; border-radius: 5px; text-align: center;">
+                    <h3 style="margin: 0;">{{ under_review }}</h3>
+                    <p style="margin: 5px 0 0;">Under Review</p>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                    <h3 style="margin: 0;">{{ interviews }}</h3>
+                    <p style="margin: 5px 0 0;">Interviews</p>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #dc3545; color: white; padding: 20px; border-radius: 5px; text-align: center;">
+                    <h3 style="margin: 0;">{{ rejected }}</h3>
+                    <p style="margin: 5px 0 0;">Rejected</p>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    
+    <h3>My Job Applications</h3>
+    <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+        <thead style="background-color: #f8f9fa;">
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Job Title</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Company</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Applied Date</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in job_applications %}
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">{{ job.title }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{{ job.company }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{{ job.date }}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">
+                    <span style="background-color: 
+                        {% if job.status == 'Under Review' %}#ffc107
+                        {% elif job.status == 'Shortlisted' %}#28a745
+                        {% elif job.status == 'Rejected' %}#dc3545
+                        {% else %}#17a2b8{% endif %}; 
+                        color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                        {{ job.status }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <br>
+    
+    <h3>Quick Actions</h3>
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Browse Jobs</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Update Profile</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Upload Resume</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Track Status</a></h4>
+                </div>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

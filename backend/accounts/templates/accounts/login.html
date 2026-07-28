@@ -1,0 +1,71 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td align="center">
+                <table width="400" style="border: 1px solid #ccc; padding: 20px; background-color: #f9f9f9;">
+                    <tr>
+                        <td>
+                            <h2 style="text-align: center; color: #2c3e50;">Login to TalentSphere</h2>
+                            <hr>
+                            
+                            <form method="POST">
+                                {% csrf_token %}
+                                <table width="100%">
+                                    <tr>
+                                        <td><label><strong>Username:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="text" name="username" required style="width: 100%; padding: 8px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td><label><strong>Password:</strong></label></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="password" name="password" required style="width: 100%; padding: 8px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><br></td>
+                                    </tr>
+                                    <tr>
+                                        <td align="center">
+                                            <button type="submit" style="background-color: #007bff; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
+                                                Login
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+                            
+                            <hr>
+                            <p style="text-align: center;">
+                                Don't have an account? <a href="{% url 'register' %}">Register here</a>
+                            </p>
+                            
+                            <br>
+                            <h4 style="text-align: center;">Demo Credentials:</h4>
+                            <table width="100%" style="font-size: 14px; background-color: #e9ecef; padding: 10px;">
+                                <tr>
+                                    <td><strong>Recruiter:</strong></td>
+                                    <td>recruiter@demo.com</td>
+                                    <td>password123</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Candidate:</strong></td>
+                                    <td>candidate@demo.com</td>
+                                    <td>password123</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+{% endblock %}
