@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, Job
 
 def register(request):
     if request.user.is_authenticated:
@@ -16,7 +16,6 @@ def register(request):
         password2 = request.POST.get('password2')
         role = request.POST.get('role', 'candidate')
         
-        # Validation
         if not username or not email or not password:
             messages.error(request, 'All fields are required!')
             return render(request, 'accounts/register.html')
@@ -37,7 +36,6 @@ def register(request):
             messages.error(request, 'Password must be at least 6 characters!')
             return render(request, 'accounts/register.html')
         
-        # Create user
         try:
             user = User.objects.create_user(
                 username=username, 
@@ -90,9 +88,10 @@ def dashboard(request):
     role = user.profile.role
     
     if role == 'recruiter':
+        jobs = Job.objects.filter(created_by=user)
         context = {
             'user': user,
-            'total_jobs': 5,
+            'total_jobs': jobs.count(),
             'total_applications': 24,
             'shortlisted': 8,
             'interviews_scheduled': 3,
@@ -100,10 +99,12 @@ def dashboard(request):
                 {'name': 'John Doe', 'position': 'Software Engineer', 'status': 'Under Review'},
                 {'name': 'Jane Smith', 'position': 'Data Analyst', 'status': 'Shortlisted'},
                 {'name': 'Mike Johnson', 'position': 'UI Designer', 'status': 'New'},
-            ]
+            ],
+            'jobs': jobs
         }
         return render(request, 'accounts/recruiter_dashboard.html', context)
     else:
+        jobs = Job.objects.filter(status='active')
         context = {
             'user': user,
             'total_applications': 4,
@@ -114,10 +115,72 @@ def dashboard(request):
                 {'title': 'Software Engineer', 'company': 'Tech Corp', 'status': 'Under Review', 'date': '2024-01-15'},
                 {'title': 'Data Analyst', 'company': 'Data Inc', 'status': 'Shortlisted', 'date': '2024-01-10'},
                 {'title': 'UI Designer', 'company': 'Design Studio', 'status': 'New', 'date': '2024-01-05'},
-            ]
+            ],
+            'available_jobs': jobs
         }
         return render(request, 'accounts/candidate_dashboard.html', context)
 
 @login_required
 def profile(request):
     return render(request, 'accounts/profile.html', {'user': request.user})
+
+@login_required
+def create_job(request):
+    if request.user.profile.role != 'recruiter':
+        messages.error(request, 'Only recruiters can post jobs!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        company = request.POST.get('company')
+        location = request.POST.get('location')
+        description = request.POST.get('description')
+        requirements = request.POST.get('requirements')
+        experience_level = request.POST.get('experience_level')
+        salary_min = request.POST.get('salary_min')
+        salary_max = request.POST.get('salary_max')
+        status = request.POST.get('status', 'active')
+        
+        if not title or not company or not location or not description or not requirements:
+            messages.error(request, 'All fields are required!')
+            return render(request, 'accounts/create_job.html')
+        
+        try:
+            job = Job.objects.create(
+                title=title,
+                company=company,
+                location=location,
+                description=description,
+                requirements=requirements,
+                experience_level=experience_level,
+                salary_min=salary_min or None,
+                salary_max=salary_max or None,
+                status=status,
+                created_by=request.user
+            )
+            messages.success(request, f'Job "{job.title}" created successfully!')
+            return redirect('view_jobs')
+        except Exception as e:
+            messages.error(request, f'Error creating job: {str(e)}')
+            return render(request, 'accounts/create_job.html')
+    
+    return render(request, 'accounts/create_job.html')
+
+@login_required
+def view_jobs(request):
+    jobs = Job.objects.filter(status='active')
+    return render(request, 'accounts/view_jobs.html', {'jobs': jobs})
+
+@login_required
+def job_detail(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    return render(request, 'accounts/job_detail.html', {'job': job})
+
+@login_required
+def my_jobs(request):
+    if request.user.profile.role != 'recruiter':
+        messages.error(request, 'Access denied!')
+        return redirect('dashboard')
+    
+    jobs = Job.objects.filter(created_by=request.user)
+    return render(request, 'accounts/my_jobs.html', {'jobs': jobs})

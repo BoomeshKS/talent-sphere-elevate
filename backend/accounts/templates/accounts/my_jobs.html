@@ -1,0 +1,67 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}My Jobs{% endblock %}
+
+{% block content %}
+    <h2>My Posted Jobs</h2>
+    <hr>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'create_job' %}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px;">
+            + Post New Job
+        </a>
+    </div>
+    
+    {% if jobs %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job Title</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Company</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Location</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Applications</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <strong>{{ job.title }}</strong>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ job.company }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ job.location }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <span style="background-color: 
+                            {% if job.status == 'active' %}#28a745
+                            {% elif job.status == 'draft' %}#ffc107
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                            {{ job.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">0</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <a href="{% url 'job_detail' job.id %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center; padding: 40px; color: #6c757d; font-size: 18px;">
+            You haven't posted any jobs yet.
+        </p>
+        <p style="text-align: center;">
+            <a href="{% url 'create_job' %}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px;">
+                Post Your First Job
+            </a>
+        </p>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

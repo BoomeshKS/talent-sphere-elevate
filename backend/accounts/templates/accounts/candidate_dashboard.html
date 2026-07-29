@@ -9,6 +9,7 @@
     
     <hr>
     
+    <!-- Statistics Cards -->
     <table width="100%" cellpadding="10">
         <tr>
             <td width="25%">
@@ -40,6 +41,31 @@
     
     <br>
     
+    <!-- Quick Actions -->
+    <h3>Quick Actions</h3>
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="33%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="{% url 'view_jobs' %}">Browse Jobs</a></h4>
+                </div>
+            </td>
+            <td width="33%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Update Profile</a></h4>
+                </div>
+            </td>
+            <td width="33%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Upload Resume</a></h4>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    
+    <!-- Job Applications -->
     <h3>My Job Applications</h3>
     <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
         <thead style="background-color: #f8f9fa;">
@@ -73,29 +99,40 @@
     
     <br>
     
-    <h3>Quick Actions</h3>
-    <table width="100%" cellpadding="10">
-        <tr>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Browse Jobs</a></h4>
-                </div>
-            </td>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Update Profile</a></h4>
-                </div>
-            </td>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Upload Resume</a></h4>
-                </div>
-            </td>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Track Status</a></h4>
-                </div>
-            </td>
-        </tr>
-    </table>
+    <!-- Available Jobs -->
+    <h3>Recent Job Openings</h3>
+    {% if available_jobs %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Job Title</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Company</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Location</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in available_jobs|slice:":5" %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{{ job.title }}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{{ job.company }}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{{ job.location }}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">
+                        <a href="{% url 'job_detail' job.id %}" style="background-color: #007bff; color: white; padding: 3px 15px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <br>
+        <div style="text-align: center;">
+            <a href="{% url 'view_jobs' %}" style="background-color: #17a2b8; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+                View All Jobs
+            </a>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: #6c757d;">No jobs available right now.</p>
+    {% endif %}
 {% endblock %}

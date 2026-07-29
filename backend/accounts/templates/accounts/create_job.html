@@ -1,0 +1,93 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Post a Job{% endblock %}
+
+{% block content %}
+    <h2>Post a New Job</h2>
+    <hr>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table width="100%" cellpadding="8">
+            <tr>
+                <td width="20%"><label><strong>Job Title:</strong></label></td>
+                <td width="80%">
+                    <input type="text" name="title" required style="width: 100%; padding: 8px;">
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Company:</strong></label></td>
+                <td>
+                    <input type="text" name="company" required style="width: 100%; padding: 8px;">
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Location:</strong></label></td>
+                <td>
+                    <input type="text" name="location" required style="width: 100%; padding: 8px;">
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Description:</strong></label></td>
+                <td>
+                    <textarea name="description" required rows="5" style="width: 100%; padding: 8px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Requirements:</strong></label></td>
+                <td>
+                    <textarea name="requirements" required rows="5" style="width: 100%; padding: 8px;"></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Experience Level:</strong></label></td>
+                <td>
+                    <select name="experience_level" style="width: 100%; padding: 8px;">
+                        <option value="entry">Entry Level</option>
+                        <option value="mid" selected>Mid Level</option>
+                        <option value="senior">Senior Level</option>
+                        <option value="lead">Lead</option>
+                        <option value="executive">Executive</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Salary Range:</strong></label></td>
+                <td>
+                    <table width="100%">
+                        <tr>
+                            <td width="45%">
+                                <input type="number" name="salary_min" step="0.01" placeholder="Min Salary" style="width: 100%; padding: 8px;">
+                            </td>
+                            <td width="10%" align="center">to</td>
+                            <td width="45%">
+                                <input type="number" name="salary_max" step="0.01" placeholder="Max Salary" style="width: 100%; padding: 8px;">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Status:</strong></label></td>
+                <td>
+                    <select name="status" style="width: 100%; padding: 8px;">
+                        <option value="active">Active</option>
+                        <option value="draft">Draft</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center">
+                    <br>
+                    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
+                        Post Job
+                    </button>
+                    <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none;">
+                        Cancel
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

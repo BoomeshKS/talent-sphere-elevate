@@ -1,0 +1,96 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Job Details{% endblock %}
+
+{% block content %}
+    <h2>{{ job.title }}</h2>
+    <hr>
+    
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="20%"><strong>Company:</strong></td>
+            <td>{{ job.company }}</td>
+        </tr>
+        <tr>
+            <td><strong>Location:</strong></td>
+            <td>{{ job.location }}</td>
+        </tr>
+        <tr>
+            <td><strong>Experience Level:</strong></td>
+            <td>
+                <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 14px;">
+                    {{ job.get_experience_level_display }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Salary Range:</strong></td>
+            <td>
+                {% if job.salary_min and job.salary_max %}
+                    ${{ job.salary_min }} - ${{ job.salary_max }}
+                {% elif job.salary_min %}
+                    From ${{ job.salary_min }}
+                {% elif job.salary_max %}
+                    Up to ${{ job.salary_max }}
+                {% else %}
+                    Not specified
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Status:</strong></td>
+            <td>
+                <span style="background-color: 
+                    {% if job.status == 'active' %}#28a745
+                    {% elif job.status == 'draft' %}#ffc107
+                    {% else %}#dc3545{% endif %}; 
+                    color: white; padding: 3px 10px; border-radius: 12px; font-size: 14px;">
+                    {{ job.get_status_display }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Posted By:</strong></td>
+            <td>{{ job.created_by.username }}</td>
+        </tr>
+        <tr>
+            <td><strong>Posted Date:</strong></td>
+            <td>{{ job.created_at|date:"F d, Y" }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><br></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h3>Job Description</h3>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    {{ job.description|linebreaks }}
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2"><br></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <h3>Requirements</h3>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    {{ job.requirements|linebreaks }}
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" align="center">
+                <br>
+                {% if user.profile.role == 'candidate' %}
+                    <button style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
+                        Apply for this Job
+                    </button>
+                {% endif %}
+                <a href="{% url 'view_jobs' %}" style="margin-left: 10px; padding: 10px 30px; background-color: #6c757d; color: white; text-decoration: none;">
+                    Back to Jobs
+                </a>
+            </td>
+        </tr>
+    </table>
+{% endblock %}

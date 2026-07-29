@@ -9,12 +9,13 @@
     
     <hr>
     
+    <!-- Statistics Cards -->
     <table width="100%" cellpadding="10">
         <tr>
             <td width="25%">
                 <div style="background-color: #007bff; color: white; padding: 20px; border-radius: 5px; text-align: center;">
                     <h3 style="margin: 0;">{{ total_jobs }}</h3>
-                    <p style="margin: 5px 0 0;">Active Jobs</p>
+                    <p style="margin: 5px 0 0;">Total Jobs</p>
                 </div>
             </td>
             <td width="25%">
@@ -40,6 +41,36 @@
     
     <br>
     
+    <!-- Quick Actions -->
+    <h3>Quick Actions</h3>
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="{% url 'create_job' %}">Post New Job</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="{% url 'my_jobs' %}">My Jobs</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="{% url 'view_jobs' %}">View All Jobs</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="#">Analytics</a></h4>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    
+    <!-- Recent Applications -->
     <h3>Recent Applications</h3>
     <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
         <thead style="background-color: #f8f9fa;">
@@ -72,33 +103,5 @@
             </tr>
             {% endfor %}
         </tbody>
-    </table>
-    
-    <br>
-    
-    <h3>Quick Actions</h3>
-    <table width="100%" cellpadding="10">
-        <tr>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Create Job</a></h4>
-                </div>
-            </td>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">View All</a></h4>
-                </div>
-            </td>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">AI Screening</a></h4>
-                </div>
-            </td>
-            <td width="25%">
-                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Analytics</a></h4>
-                </div>
-            </td>
-        </tr>
     </table>
 {% endblock %}
