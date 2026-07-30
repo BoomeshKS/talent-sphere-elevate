@@ -83,11 +83,21 @@
             <td colspan="2" align="center">
                 <br>
                 {% if user.profile.role == 'candidate' %}
-                    <button style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
-                        Apply for this Job
-                    </button>
+                    {% if has_applied %}
+                        <span style="background-color: #28a745; color: white; padding: 10px 40px; border-radius: 5px; display: inline-block;">
+                            Already Applied
+                        </span>
+                    {% else %}
+                        <a href="{% url 'apply_job' job.id %}" style="background-color: #28a745; color: white; padding: 10px 40px; text-decoration: none; border-radius: 5px;">
+                            Apply for this Job
+                        </a>
+                    {% endif %}
+                {% elif user.profile.role == 'recruiter' and job.created_by == user %}
+                    <a href="{% url 'job_applications' job.id %}" style="background-color: #007bff; color: white; padding: 10px 40px; text-decoration: none; border-radius: 5px;">
+                        View Applications ({{ job.applications.count }})
+                    </a>
                 {% endif %}
-                <a href="{% url 'view_jobs' %}" style="margin-left: 10px; padding: 10px 30px; background-color: #6c757d; color: white; text-decoration: none;">
+                <a href="{% url 'view_jobs' %}" style="margin-left: 10px; padding: 10px 30px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
                     Back to Jobs
                 </a>
             </td>

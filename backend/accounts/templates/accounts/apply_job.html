@@ -1,0 +1,37 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Apply for Job{% endblock %}
+
+{% block content %}
+    <h2>Apply for Job</h2>
+    <hr>
+    
+    <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>{{ job.title }}</h3>
+        <p><strong>Company:</strong> {{ job.company }}</p>
+        <p><strong>Location:</strong> {{ job.location }}</p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table width="100%" cellpadding="8">
+            <tr>
+                <td width="20%"><label><strong>Cover Letter:</strong></label></td>
+                <td width="80%">
+                    <textarea name="cover_letter" rows="8" style="width: 100%; padding: 8px;" placeholder="Write a brief cover letter explaining why you are suitable for this position..."></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center">
+                    <br>
+                    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
+                        Submit Application
+                    </button>
+                    <a href="{% url 'job_detail' job.id %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none;">
+                        Cancel
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

@@ -52,12 +52,12 @@
             </td>
             <td width="33%">
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Update Profile</a></h4>
+                    <h4><a href="{% url 'my_applications' %}">My Applications</a></h4>
                 </div>
             </td>
             <td width="33%">
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Upload Resume</a></h4>
+                    <h4><a href="#">Update Profile</a></h4>
                 </div>
             </td>
         </tr>
@@ -65,37 +65,50 @@
     
     <br>
     
-    <!-- Job Applications -->
-    <h3>My Job Applications</h3>
-    <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
-        <thead style="background-color: #f8f9fa;">
-            <tr>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Job Title</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Company</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Applied Date</th>
-                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for job in job_applications %}
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ job.title }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ job.company }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">{{ job.date }}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">
-                    <span style="background-color: 
-                        {% if job.status == 'Under Review' %}#ffc107
-                        {% elif job.status == 'Shortlisted' %}#28a745
-                        {% elif job.status == 'Rejected' %}#dc3545
-                        {% else %}#17a2b8{% endif %}; 
-                        color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
-                        {{ job.status }}
-                    </span>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- My Recent Applications -->
+    <h3>My Recent Applications</h3>
+    {% if applications %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Job Title</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Company</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Applied Date</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications|slice:":5" %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{{ application.job.title }}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{{ application.job.company }}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">{{ application.applied_at|date:"M d, Y" }}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">
+                        <span style="background-color: 
+                            {% if application.status == 'pending' %}#ffc107
+                            {% elif application.status == 'reviewed' %}#17a2b8
+                            {% elif application.status == 'shortlisted' %}#28a745
+                            {% elif application.status == 'interview' %}#007bff
+                            {% elif application.status == 'accepted' %}#28a745
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                            {{ application.get_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if applications.count > 5 %}
+            <p style="text-align: center; margin-top: 10px;">
+                <a href="{% url 'my_applications' %}">View all {{ applications.count }} applications</a>
+            </p>
+        {% endif %}
+    {% else %}
+        <p style="text-align: center; padding: 20px; color: #6c757d;">
+            You haven't applied for any jobs yet. <a href="{% url 'view_jobs' %}">Browse available jobs</a>
+        </p>
+    {% endif %}
     
     <br>
     

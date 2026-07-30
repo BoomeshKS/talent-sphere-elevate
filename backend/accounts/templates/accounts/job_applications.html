@@ -1,0 +1,122 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Job Applications{% endblock %}
+
+{% block content %}
+    <h2>Applications for: {{ job.title }}</h2>
+    <p style="color: #6c757d;">Company: {{ job.company }} | Location: {{ job.location }}</p>
+    <hr>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'my_jobs' %}" style="background-color: #6c757d; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Back to My Jobs
+        </a>
+        <span style="margin-left: 15px;">Total Applications: <strong>{{ applications.count }}</strong></span>
+    </div>
+    
+    {% if applications %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">#</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Candidate</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Email</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Applied Date</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ forloop.counter }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <strong>{{ application.candidate.username }}</strong>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ application.candidate.email }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ application.applied_at|date:"M d, Y H:i" }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <span style="background-color: 
+                            {% if application.status == 'pending' %}#ffc107
+                            {% elif application.status == 'reviewed' %}#17a2b8
+                            {% elif application.status == 'shortlisted' %}#28a745
+                            {% elif application.status == 'interview' %}#007bff
+                            {% elif application.status == 'accepted' %}#28a745
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                            {{ application.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <form method="POST" action="{% url 'update_application_status' application.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <select name="status" style="padding: 5px;">
+                                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="reviewed" {% if application.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                <option value="interview" {% if application.status == 'interview' %}selected{% endif %}>Interview</option>
+                                <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                            <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">
+                                Update
+                            </button>
+                        </form>
+                        <br>
+                        <button onclick="toggleNotes('notes_{{ application.id }}')" style="background-color: #6c757d; color: white; border: none; padding: 3px 10px; cursor: pointer; border-radius: 3px; margin-top: 5px; font-size: 12px;">
+                            Notes
+                        </button>
+                        <div id="notes_{{ application.id }}" style="display: none; margin-top: 5px; text-align: left;">
+                            {% if application.notes %}
+                                <p style="background-color: #f8f9fa; padding: 5px; font-size: 12px; margin: 0;">
+                                    {{ application.notes }}
+                                </p>
+                            {% else %}
+                                <p style="color: #6c757d; font-size: 12px; margin: 0;">No notes added</p>
+                            {% endif %}
+                            <form method="POST" action="{% url 'update_application_status' application.id %}" style="margin-top: 5px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="{{ application.status }}">
+                                <input type="text" name="notes" placeholder="Add notes..." style="width: 100%; padding: 5px; font-size: 12px;">
+                                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 3px 10px; cursor: pointer; border-radius: 3px; font-size: 12px; margin-top: 3px;">
+                                    Save Note
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <br>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h4>Application Summary</h4>
+            <table width="100%">
+                <tr>
+                    <td><strong>Total Applications:</strong> {{ applications.count }}</td>
+                    <td><strong>Pending:</strong> {{ applications|dictsort:"status"|length }}</td>
+                    <td><strong>Shortlisted:</strong> {{ applications|length }}</td>
+                </tr>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; padding: 40px; color: #6c757d; font-size: 18px;">
+            No applications received for this job yet.
+        </p>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'my_jobs' %}">Back to My Jobs</a>
+    
+    <script>
+        function toggleNotes(id) {
+            var element = document.getElementById(id);
+            if (element.style.display === "none") {
+                element.style.display = "block";
+            } else {
+                element.style.display = "none";
+            }
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+    <h2>My Job Applications</h2>
+    <hr>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'view_jobs' %}" style="background-color: #28a745; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Browse More Jobs
+        </a>
+        <span style="margin-left: 15px;">Total Applications: <strong>{{ applications.count }}</strong></span>
+    </div>
+    
+    {% if applications %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job Title</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Company</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Applied Date</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <strong>{{ application.job.title }}</strong>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ application.job.company }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ application.applied_at|date:"M d, Y" }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <span style="background-color: 
+                            {% if application.status == 'pending' %}#ffc107
+                            {% elif application.status == 'reviewed' %}#17a2b8
+                            {% elif application.status == 'shortlisted' %}#28a745
+                            {% elif application.status == 'interview' %}#007bff
+                            {% elif application.status == 'accepted' %}#28a745
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                            {{ application.get_status_display }}
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <a href="{% url 'job_detail' application.job.id %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            View Job
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <br>
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h4>Application Summary</h4>
+            <table width="100%">
+                <tr>
+                    <td><strong>Total Applications:</strong> {{ applications.count }}</td>
+                    <td><strong>Pending:</strong> 
+                        {% with pending=applications|dictsort:"status" %}
+                            {{ pending|length }}
+                        {% endwith %}
+                    </td>
+                    <td><strong>Shortlisted:</strong> 
+                        {% with shortlisted=applications|dictsort:"status" %}
+                            {{ shortlisted|length }}
+                        {% endwith %}
+                    </td>
+                    <td><strong>Interview:</strong> 
+                        {% with interview=applications|dictsort:"status" %}
+                            {{ interview|length }}
+                        {% endwith %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; padding: 40px; color: #6c757d; font-size: 18px;">
+            You haven't applied for any jobs yet.
+        </p>
+        <p style="text-align: center;">
+            <a href="{% url 'view_jobs' %}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px;">
+                Browse Available Jobs
+            </a>
+        </p>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

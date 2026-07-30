@@ -4,7 +4,6 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 class UserProfile(models.Model):
-    
     ROLE_CHOICES = (
         ('recruiter', 'Recruiter'),
         ('candidate', 'Candidate'),
@@ -20,6 +19,15 @@ class UserProfile(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.get_role_display()}"
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
 
 
 class Job(models.Model):
@@ -57,12 +65,28 @@ class Job(models.Model):
         ordering = ['-created_at']
 
 
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+class JobApplication(models.Model):
+    APPLICATION_STATUS = (
+        ('pending', 'Pending'),
+        ('reviewed', 'Reviewed'),
+        ('shortlisted', 'Shortlisted'),
+        ('interview', 'Interview Scheduled'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+    )
+    
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
+    candidate = models.ForeignKey(User, on_delete=models.CASCADE, related_name='applications')
+    cover_letter = models.TextField(blank=True, null=True)
+    resume = models.FileField(upload_to='application_resumes/', blank=True, null=True)
+    status = models.CharField(max_length=20, choices=APPLICATION_STATUS, default='pending')
+    notes = models.TextField(blank=True, null=True)
+    applied_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['job', 'candidate']
+        ordering = ['-applied_at']
+    
+    def __str__(self):
+        return f"{self.candidate.username} - {self.job.title}"

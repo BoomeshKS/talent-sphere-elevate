@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .models import UserProfile, Job
+from .models import UserProfile, Job, JobApplication
 
 def register(request):
     if request.user.is_authenticated:
@@ -89,34 +89,29 @@ def dashboard(request):
     
     if role == 'recruiter':
         jobs = Job.objects.filter(created_by=user)
+        total_applications = JobApplication.objects.filter(job__created_by=user).count()
+        
         context = {
             'user': user,
             'total_jobs': jobs.count(),
-            'total_applications': 24,
-            'shortlisted': 8,
-            'interviews_scheduled': 3,
-            'recent_applications': [
-                {'name': 'John Doe', 'position': 'Software Engineer', 'status': 'Under Review'},
-                {'name': 'Jane Smith', 'position': 'Data Analyst', 'status': 'Shortlisted'},
-                {'name': 'Mike Johnson', 'position': 'UI Designer', 'status': 'New'},
-            ],
+            'total_applications': total_applications,
+            'shortlisted': JobApplication.objects.filter(job__created_by=user, status='shortlisted').count(),
+            'interviews_scheduled': JobApplication.objects.filter(job__created_by=user, status='interview').count(),
             'jobs': jobs
         }
         return render(request, 'accounts/recruiter_dashboard.html', context)
     else:
-        jobs = Job.objects.filter(status='active')
+        applications = JobApplication.objects.filter(candidate=user)
+        available_jobs = Job.objects.filter(status='active')
+        
         context = {
             'user': user,
-            'total_applications': 4,
-            'under_review': 2,
-            'interviews': 1,
-            'rejected': 1,
-            'job_applications': [
-                {'title': 'Software Engineer', 'company': 'Tech Corp', 'status': 'Under Review', 'date': '2024-01-15'},
-                {'title': 'Data Analyst', 'company': 'Data Inc', 'status': 'Shortlisted', 'date': '2024-01-10'},
-                {'title': 'UI Designer', 'company': 'Design Studio', 'status': 'New', 'date': '2024-01-05'},
-            ],
-            'available_jobs': jobs
+            'total_applications': applications.count(),
+            'under_review': applications.filter(status='pending').count(),
+            'interviews': applications.filter(status='interview').count(),
+            'rejected': applications.filter(status='rejected').count(),
+            'applications': applications,
+            'available_jobs': available_jobs
         }
         return render(request, 'accounts/candidate_dashboard.html', context)
 
@@ -174,7 +169,15 @@ def view_jobs(request):
 @login_required
 def job_detail(request, job_id):
     job = get_object_or_404(Job, id=job_id)
-    return render(request, 'accounts/job_detail.html', {'job': job})
+    
+    has_applied = False
+    if request.user.profile.role == 'candidate':
+        has_applied = JobApplication.objects.filter(job=job, candidate=request.user).exists()
+    
+    return render(request, 'accounts/job_detail.html', {
+        'job': job,
+        'has_applied': has_applied
+    })
 
 @login_required
 def my_jobs(request):
@@ -184,3 +187,79 @@ def my_jobs(request):
     
     jobs = Job.objects.filter(created_by=request.user)
     return render(request, 'accounts/my_jobs.html', {'jobs': jobs})
+
+@login_required
+def apply_job(request, job_id):
+    if request.user.profile.role != 'candidate':
+        messages.error(request, 'Only candidates can apply for jobs!')
+        return redirect('dashboard')
+    
+    job = get_object_or_404(Job, id=job_id)
+    
+    if JobApplication.objects.filter(job=job, candidate=request.user).exists():
+        messages.error(request, 'You have already applied for this job!')
+        return redirect('job_detail', job_id=job.id)
+    
+    if request.method == 'POST':
+        cover_letter = request.POST.get('cover_letter')
+        
+        try:
+            application = JobApplication.objects.create(
+                job=job,
+                candidate=request.user,
+                cover_letter=cover_letter,
+                status='pending'
+            )
+            messages.success(request, f'Your application for "{job.title}" has been submitted successfully!')
+            return redirect('job_detail', job_id=job.id)
+        except Exception as e:
+            messages.error(request, f'Error submitting application: {str(e)}')
+            return render(request, 'accounts/apply_job.html', {'job': job})
+    
+    return render(request, 'accounts/apply_job.html', {'job': job})
+
+@login_required
+def job_applications(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    
+    if job.created_by != request.user:
+        messages.error(request, 'You are not authorized to view applications for this job!')
+        return redirect('dashboard')
+    
+    applications = JobApplication.objects.filter(job=job)
+    return render(request, 'accounts/job_applications.html', {
+        'job': job,
+        'applications': applications
+    })
+
+@login_required
+def update_application_status(request, application_id):
+    application = get_object_or_404(JobApplication, id=application_id)
+    
+
+    if application.job.created_by != request.user:
+        messages.error(request, 'You are not authorized to update this application!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        notes = request.POST.get('notes', '')
+        
+        if status:
+            application.status = status
+            application.notes = notes
+            application.save()
+            messages.success(request, f'Application status updated to {application.get_status_display()}')
+        
+        return redirect('job_applications', job_id=application.job.id)
+    
+    return redirect('job_applications', job_id=application.job.id)
+
+@login_required
+def my_applications(request):
+    if request.user.profile.role != 'candidate':
+        messages.error(request, 'Access denied!')
+        return redirect('dashboard')
+    
+    applications = JobApplication.objects.filter(candidate=request.user)
+    return render(request, 'accounts/my_applications.html', {'applications': applications})
