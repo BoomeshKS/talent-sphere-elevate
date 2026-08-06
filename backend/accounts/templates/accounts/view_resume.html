@@ -1,0 +1,68 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}My Resume Data{% endblock %}
+
+{% block content %}
+    <h2>My Resume Data</h2>
+    <hr>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'upload_resume' %}" style="background-color: #007bff; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Update Resume
+        </a>
+    </div>
+    
+    <table width="100%" cellpadding="10" style="background-color: #f8f9fa; border-radius: 5px;">
+        <tr>
+            <td width="30%"><strong>Resume Uploaded:</strong></td>
+            <td>
+                {% if profile.resume %}
+                    <a href="{{ profile.resume.url }}" target="_blank" style="color: #007bff;">
+                        {{ profile.resume.name }}
+                    </a>
+                {% else %}
+                    <span style="color: #6c757d;">No resume uploaded</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Skills Extracted:</strong></td>
+            <td>
+                {% if skills %}
+                    {% for skill in skills %}
+                        <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                            {{ skill }}
+                        </span>
+                    {% endfor %}
+                {% else %}
+                    <span style="color: #6c757d;">No skills extracted yet</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Experience Years:</strong></td>
+            <td>
+                {% if profile.experience_years %}
+                    {{ profile.experience_years }} years
+                {% else %}
+                    <span style="color: #6c757d;">Not extracted yet</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Resume Text Preview:</strong></td>
+            <td>
+                {% if profile.resume_text %}
+                    <div style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; max-height: 200px; overflow-y: scroll; white-space: pre-wrap; font-size: 12px;">
+                        {{ profile.resume_text|truncatewords:100 }}
+                    </div>
+                {% else %}
+                    <span style="color: #6c757d;">No text extracted</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Candidate Resume{% endblock %}
+
+{% block content %}
+    <h2>Candidate Resume Data</h2>
+    <hr>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>{{ application.candidate.username }}</h3>
+        <p><strong>Email:</strong> {{ application.candidate.email }}</p>
+        <p><strong>Job Applied:</strong> {{ application.job.title }}</p>
+        <p><strong>Applied Date:</strong> {{ application.applied_at|date:"F d, Y" }}</p>
+        <p><strong>Status:</strong> {{ application.get_status_display }}</p>
+    </div>
+    
+    <h3>Resume Analysis</h3>
+    <table width="100%" cellpadding="10" style="background-color: #f8f9fa; border-radius: 5px;">
+        <tr>
+            <td width="30%"><strong>Skills Identified:</strong></td>
+            <td>
+                {% if application.parsed_skills %}
+                    {% with skills=application.parsed_skills|split:',' %}
+                        {% for skill in skills %}
+                            <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                {{ skill|trim }}
+                            </span>
+                        {% endfor %}
+                    {% endwith %}
+                {% else %}
+                    <span style="color: #6c757d;">No skills identified</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Experience:</strong></td>
+            <td>
+                {% if application.experience_years %}
+                    {{ application.experience_years }} years
+                {% else %}
+                    <span style="color: #6c757d;">Not identified</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Education:</strong></td>
+            <td>
+                {% if application.parsed_education %}
+                    <pre style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 0; white-space: pre-wrap; font-size: 12px;">
+                        {{ application.parsed_education }}
+                    </pre>
+                {% else %}
+                    <span style="color: #6c757d;">Not identified</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Resume Preview:</strong></td>
+            <td>
+                {% if application.resume_text %}
+                    <div style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; max-height: 300px; overflow-y: scroll; white-space: pre-wrap; font-size: 12px;">
+                        {{ application.resume_text|truncatewords:200 }}
+                    </div>
+                {% else %}
+                    <span style="color: #6c757d;">No text extracted</span>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    <a href="{% url 'job_applications' application.job.id %}" style="background-color: #6c757d; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+        Back to Applications
+    </a>
+    <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 8px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;">
+        Dashboard
+    </a>
+{% endblock %}

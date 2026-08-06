@@ -45,19 +45,24 @@
     <h3>Quick Actions</h3>
     <table width="100%" cellpadding="10">
         <tr>
-            <td width="33%">
+            <td width="25%">
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
                     <h4><a href="{% url 'view_jobs' %}">Browse Jobs</a></h4>
                 </div>
             </td>
-            <td width="33%">
+            <td width="25%">
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
                     <h4><a href="{% url 'my_applications' %}">My Applications</a></h4>
                 </div>
             </td>
-            <td width="33%">
+            <td width="25%">
                 <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
-                    <h4><a href="#">Update Profile</a></h4>
+                    <h4><a href="{% url 'upload_resume' %}">Upload Resume</a></h4>
+                </div>
+            </td>
+            <td width="25%">
+                <div style="background-color: #e9ecef; padding: 15px; border-radius: 5px; text-align: center;">
+                    <h4><a href="{% url 'view_resume' %}">View Resume</a></h4>
                 </div>
             </td>
         </tr>

@@ -1,0 +1,91 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Upload Resume{% endblock %}
+
+{% block content %}
+    <h2>Upload & Parse Resume</h2>
+    <hr>
+    
+    {% if success %}
+        <div style="background-color: #d4edda; padding: 15px; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="color: #155724; margin-top: 0;">Resume Parsed Successfully!</h3>
+            
+            <table width="100%" cellpadding="8">
+                <tr>
+                    <td width="30%"><strong>Skills Found:</strong></td>
+                    <td>
+                        {% if parsed_data.skills %}
+                            {% for skill in parsed_data.skills %}
+                                <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                    {{ skill }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="color: #6c757d;">No skills identified</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Experience Years:</strong></td>
+                    <td>{{ parsed_data.experience_years }} years</td>
+                </tr>
+                <tr>
+                    <td><strong>Education:</strong></td>
+                    <td>
+                        {% if parsed_data.education %}
+                            <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin: 0; white-space: pre-wrap;">{{ parsed_data.education }}</pre>
+                        {% else %}
+                            <span style="color: #6c757d;">Not identified</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+            
+            <br>
+            <a href="{% url 'dashboard' %}" style="background-color: #28a745; color: white; padding: 10px 30px; text-decoration: none; border-radius: 5px;">
+                Go to Dashboard
+            </a>
+            <a href="{% url 'upload_resume' %}" style="margin-left: 10px; padding: 10px 30px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+                Upload Another Resume
+            </a>
+        </div>
+    
+    {% else %}
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+            <p><strong>Instructions:</strong></p>
+            <ul>
+                <li>Upload your resume in PDF, DOCX, DOC, or TXT format</li>
+                <li>File size should be less than 5MB</li>
+                <li>The system will automatically extract your skills, experience, and education</li>
+            </ul>
+        </div>
+        
+        <br>
+        
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <table width="100%" cellpadding="8">
+                <tr>
+                    <td width="20%"><label><strong>Select Resume:</strong></label></td>
+                    <td width="80%">
+                        <input type="file" name="resume" accept=".pdf,.docx,.doc,.txt" required style="width: 100%; padding: 8px; border: 1px solid #ccc;">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="center">
+                        <br>
+                        <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
+                            Upload & Parse Resume
+                        </button>
+                        <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
+                            Cancel
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

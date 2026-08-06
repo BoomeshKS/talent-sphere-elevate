@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import UserProfile, Job, JobApplication
+from .resume_parser import parse_resume
 
 def register(request):
     if request.user.is_authenticated:
@@ -263,3 +264,85 @@ def my_applications(request):
     
     applications = JobApplication.objects.filter(candidate=request.user)
     return render(request, 'accounts/my_applications.html', {'applications': applications})
+
+
+@login_required
+def upload_resume(request):
+    if request.user.profile.role != 'candidate':
+        messages.error(request, 'Only candidates can upload resumes!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        resume_file = request.FILES.get('resume')
+        
+        if not resume_file:
+            messages.error(request, 'Please select a file to upload!')
+            return render(request, 'accounts/upload_resume.html')
+        
+        if resume_file.size > 5 * 1024 * 1024:
+            messages.error(request, 'File size should be less than 5MB!')
+            return render(request, 'accounts/upload_resume.html')
+        
+        allowed_extensions = ['.pdf', '.docx', '.doc', '.txt']
+        file_name = resume_file.name.lower()
+        if not any(file_name.endswith(ext) for ext in allowed_extensions):
+            messages.error(request, 'Please upload PDF, DOCX, DOC, or TXT files only!')
+            return render(request, 'accounts/upload_resume.html')
+        
+        try:
+            parsed_data = parse_resume(resume_file)
+            
+            if parsed_data['success']:
+                profile = request.user.profile
+                profile.resume = resume_file
+                profile.resume_text = parsed_data['text'][:5000]  
+                profile.skills = ', '.join(parsed_data['skills'])
+                profile.experience_years = parsed_data['experience_years']
+                profile.save()
+                
+                messages.success(
+                    request, 
+                    f'Resume uploaded and parsed successfully! '
+                    f'Found {len(parsed_data["skills"])} skills and {parsed_data["experience_years"]} years of experience.'
+                )
+                
+                return render(request, 'accounts/upload_resume.html', {
+                    'parsed_data': parsed_data,
+                    'success': True
+                })
+            else:
+                profile = request.user.profile
+                profile.resume = resume_file
+                profile.save()
+                messages.warning(request, 'Resume uploaded but could not be parsed. Please try a different format.')
+                
+        except Exception as e:
+            messages.error(request, f'Error uploading resume: {str(e)}')
+    
+    return render(request, 'accounts/upload_resume.html')
+
+@login_required
+def view_resume(request):
+    if request.user.profile.role != 'candidate':
+        messages.error(request, 'Access denied!')
+        return redirect('dashboard')
+    
+    profile = request.user.profile
+    skills_list = profile.skills.split(', ') if profile.skills else []
+    
+    return render(request, 'accounts/view_resume.html', {
+        'profile': profile,
+        'skills': skills_list
+    })
+
+@login_required
+def parse_application_resume(request, application_id):
+    application = get_object_or_404(JobApplication, id=application_id)
+    
+    if application.job.created_by != request.user:
+        messages.error(request, 'You are not authorized to view this!')
+        return redirect('dashboard')
+    
+    return render(request, 'accounts/application_resume.html', {
+        'application': application
+    })

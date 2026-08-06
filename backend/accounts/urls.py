@@ -15,4 +15,8 @@ urlpatterns = [
     path('job/<int:job_id>/applications/', views.job_applications, name='job_applications'),
     path('application/<int:application_id>/update/', views.update_application_status, name='update_application_status'),
     path('my-applications/', views.my_applications, name='my_applications'),
+
+    path('upload-resume/', views.upload_resume, name='upload_resume'),
+    path('view-resume/', views.view_resume, name='view_resume'),
+    path('application/<int:application_id>/resume/', views.parse_application_resume, name='application_resume'),
 ]
