@@ -1,0 +1,119 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Bulk AI Analysis{% endblock %}
+
+{% block content %}
+    <h2>Bulk AI Analysis Results</h2>
+    <p style="color: #6c757d;">Job: <strong>{{ job.title }}</strong> at {{ job.company }}</p>
+    <hr>
+    
+    <div style="background-color: #d4edda; padding: 15px; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #155724;">
+            <strong>Analysis Complete!</strong> 
+            Successfully analyzed {{ analyzed }} out of {{ total }} applications.
+        </p>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{% url 'rank_job_applications' job.id %}" style="background-color: #007bff; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            View Ranked Candidates
+        </a>
+        <a href="{% url 'job_applications' job.id %}" style="margin-left: 10px; padding: 8px 20px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 3px;">
+            Back to Applications
+        </a>
+    </div>
+    
+    <h3>Analysis Summary</h3>
+    <table width="100%" cellpadding="10" style="background-color: #f8f9fa; border-radius: 5px;">
+        <tr>
+            <td width="25%"><strong>Total Applications:</strong></td>
+            <td>{{ total }}</td>
+            <td width="25%"><strong>Analyzed:</strong></td>
+            <td>{{ analyzed }}</td>
+        </tr>
+        <tr>
+            <td><strong>Top Score:</strong></td>
+            <td>
+                {% if matches %}
+                    {{ matches.0.scores.overall_score }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </td>
+            <td><strong>Average Score:</strong></td>
+            <td>
+                {% if matches %}
+                    {% with total_score=0 %}
+                        {% for item in matches %}
+                            {% with total_score=total_score|add:item.scores.overall_score %}
+                            {% endwith %}
+                        {% endfor %}
+                    {% endwith %}
+                    {{ matches|length }}
+                {% else %}
+                    0%
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    
+    <h3>Top 5 Candidates</h3>
+    <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+        <thead style="background-color: #f8f9fa;">
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Rank</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Candidate</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Score</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Status</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in matches|slice:":5" %}
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                    <span style="background-color: 
+                        {% if forloop.counter <= 3 %}#28a745
+                        {% elif forloop.counter <= 5 %}#ffc107
+                        {% else %}#6c757d{% endif %}; 
+                        color: white; padding: 3px 10px; border-radius: 50%; font-weight: bold;">
+                        #{{ forloop.counter }}
+                    </span>
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px;">
+                    <strong>{{ item.application.candidate.username }}</strong>
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                    <span style="background-color: 
+                        {% if item.scores.overall_score >= 70 %}#28a745
+                        {% elif item.scores.overall_score >= 50 %}#ffc107
+                        {% else %}#dc3545{% endif %}; 
+                        color: white; padding: 5px 10px; border-radius: 12px; font-weight: bold;">
+                        {{ item.scores.overall_score }}%
+                    </span>
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                    <span style="background-color: 
+                        {% if item.application.status == 'shortlisted' %}#28a745
+                        {% elif item.application.status == 'interview' %}#007bff
+                        {% elif item.application.status == 'rejected' %}#dc3545
+                        {% else %}#ffc107{% endif %}; 
+                        color: white; padding: 3px 10px; border-radius: 12px; font-size: 11px;">
+                        {{ item.application.get_status_display }}
+                    </span>
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                    <a href="{% url 'analyze_application' item.application.id %}" style="background-color: #007bff; color: white; padding: 3px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                        View Details
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <br>
+    <a href="{% url 'my_jobs' %}">Back to My Jobs</a>
+{% endblock %}

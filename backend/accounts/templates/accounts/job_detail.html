@@ -24,6 +24,24 @@
             </td>
         </tr>
         <tr>
+            <td><strong>Required Skills:</strong></td>
+            <td>
+                {% if job.required_skills %}
+                    {% with skills=job.required_skills|cut:" "|cut:"," %}
+                        {% for skill in job.required_skills|cut:","|cut:" "|split:"," %}
+                            {% if skill %}
+                                <span style="background-color: #007bff; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                    {{ skill }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                {% else %}
+                    <span style="color: #6c757d;">No specific skills listed</span>
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
             <td><strong>Salary Range:</strong></td>
             <td>
                 {% if job.salary_min and job.salary_max %}
@@ -51,7 +69,14 @@
         </tr>
         <tr>
             <td><strong>Posted By:</strong></td>
-            <td>{{ job.created_by.username }}</td>
+            <td>
+                <span style="background-color: #6c757d; color: white; padding: 3px 10px; border-radius: 12px; font-size: 14px;">
+                    {{ recruiter_name }}
+                </span>
+                <span style="color: #6c757d; font-size: 12px; margin-left: 10px;">
+                    (Recruiter)
+                </span>
+            </td>
         </tr>
         <tr>
             <td><strong>Posted Date:</strong></td>
@@ -95,6 +120,9 @@
                 {% elif user.profile.role == 'recruiter' and job.created_by == user %}
                     <a href="{% url 'job_applications' job.id %}" style="background-color: #007bff; color: white; padding: 10px 40px; text-decoration: none; border-radius: 5px;">
                         View Applications ({{ job.applications.count }})
+                    </a>
+                    <a href="{% url 'rank_job_applications' job.id %}" style="margin-left: 10px; background-color: #17a2b8; color: white; padding: 10px 40px; text-decoration: none; border-radius: 5px;">
+                        AI Ranking
                     </a>
                 {% endif %}
                 <a href="{% url 'view_jobs' %}" style="margin-left: 10px; padding: 10px 30px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">

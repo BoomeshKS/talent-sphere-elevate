@@ -5,6 +5,7 @@ import pdfplumber
 from io import BytesIO
 
 def extract_text_from_pdf(file):
+    """Extract text from PDF file"""
     text = ""
     try:
         with pdfplumber.open(file) as pdf:
@@ -21,6 +22,7 @@ def extract_text_from_pdf(file):
     return text
 
 def extract_text_from_docx(file):
+    """Extract text from DOCX file"""
     text = ""
     try:
         doc = docx.Document(file)
@@ -31,6 +33,7 @@ def extract_text_from_docx(file):
     return text
 
 def extract_text_from_file(file):
+    """Extract text from uploaded resume file"""
     file_name = file.name.lower()
     text = ""
     
@@ -54,91 +57,60 @@ def extract_text_from_file(file):
     
     return text
 
-def extract_experience_years(text):
-    patterns = [
-        r'(\d+)\+?\s*(?:years?|yrs?)\s*(?:of)?\s*experience',
-        r'experience\s*(?:of)?\s*(\d+)\+?\s*(?:years?|yrs?)',
-        r'(\d+)\s*(?:years?|yrs?)\s*(?:of)?\s*(?:experience|exp)',
-        r'(\d+)\s*\+\s*(?:years?|yrs?)',
-        r'(\d+\.?\d*)\s*(?:years?|yrs?)\s*experience',
-    ]
-    
-    for pattern in patterns:
-        match = re.search(pattern, text.lower())
-        if match:
-            try:
-                return int(float(match.group(1)))
-            except:
-                pass
-    return 0
-
 def extract_skills(text):
-    common_skills = [
-        'python', 'java', 'javascript', 'html', 'css', 'sql', 'nosql',
-        'django', 'flask', 'react', 'angular', 'vue', 'node', 'express',
+    """Extract skills from resume text using simple pattern matching"""
+    skills = []
+    
+    skills_db = [
+        'python', 'java', 'javascript', 'typescript', 'c++', 'c#', 'ruby', 
+        'php', 'swift', 'kotlin', 'go', 'rust', 'scala', 'perl', 'r', 'matlab',
+        'html', 'css', 'react', 'angular', 'vue', 'node.js', 'express', 'django',
+        'flask', 'spring', 'asp.net', 'jquery', 'bootstrap', 'tailwind',
+        'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch',
+        'cassandra', 'dynamodb', 'oracle', 'sqlite', 'firebase',
         'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'git',
-        'agile', 'scrum', 'project management', 'leadership', 'communication',
-        'problem solving', 'teamwork', 'critical thinking', 'creativity',
-        'data analysis', 'machine learning', 'deep learning', 'nlp', 'ai',
-        'tensorflow', 'pytorch', 'scikit-learn', 'pandas', 'numpy',
-        'c++', 'c#', 'ruby', 'php', 'swift', 'kotlin', 'typescript',
-        'mysql', 'postgresql', 'mongodb', 'redis', 'elasticsearch',
-        'rest api', 'graphql', 'soap', 'microservices', 'cloud computing',
-        'devops', 'ci/cd', 'linux', 'unix', 'windows', 'macos',
-        'photoshop', 'illustrator', 'figma', 'sketch', 'adobe xd',
+        'github', 'gitlab', 'bitbucket', 'terraform', 'ansible', 'puppet',
+        'chef', 'prometheus', 'grafana', 'elk', 'splunk',
+        'machine learning', 'deep learning', 'nlp', 'natural language processing',
+        'tensorflow', 'pytorch', 'keras', 'scikit-learn', 'pandas', 'numpy',
+        'matplotlib', 'seaborn', 'jupyter', 'hadoop', 'spark', 'kafka',
+        'photoshop', 'illustrator', 'figma', 'sketch', 'adobe xd', 'invision',
+        'after effects', 'premiere pro', 'blender', 'autocad',
+        'agile', 'scrum', 'kanban', 'jira', 'confluence', 'leadership',
+        'communication', 'problem solving', 'teamwork', 'critical thinking',
+        'creativity', 'time management', 'project management', 'organization',
         'sales', 'marketing', 'finance', 'accounting', 'hr', 'recruitment',
         'copywriting', 'content writing', 'seo', 'sem', 'social media',
-        'ui design', 'ux design', 'product design', 'graphic design',
+        'google analytics', 'adwords', 'hubspot', 'salesforce',
+        'rest api', 'graphql', 'soap', 'microservices', 'linux', 'unix',
+        'windows', 'macos', 'ios', 'android', 'react native', 'flutter',
+        'ux design', 'ui design', 'product design', 'graphic design',
         'frontend', 'backend', 'full stack', 'mobile development'
     ]
     
-    found_skills = []
     text_lower = text.lower()
     
-    for skill in common_skills:
+    for skill in skills_db:
         if skill in text_lower:
-            found_skills.append(skill)
+            skills.append(skill)
     
-    return list(set(found_skills))
-
-def extract_education(text):
-    education_keywords = [
-        'bachelor', 'master', 'phd', 'b.sc', 'm.sc', 'b.tech', 'm.tech',
-        'be', 'me', 'b.com', 'm.com', 'mba', 'bca', 'mca', 'ba', 'ma',
-        'bs', 'ms', 'ph.d', 'doctorate', 'degree', 'university', 'college'
-    ]
-    
-    education_lines = []
-    lines = text.split('\n')
-    
-    for line in lines:
-        line_lower = line.lower()
-        if any(keyword in line_lower for keyword in education_keywords):
-            education_lines.append(line.strip())
-    
-    return '\n'.join(education_lines[:5])
+    return list(set(skills))
 
 def parse_resume(file):
-
+    """Parse resume and extract only skills"""
     text = extract_text_from_file(file)
     
     if not text:
         return {
             'text': '',
             'skills': [],
-            'experience_years': 0,
-            'education': '',
             'success': False
         }
     
     skills = extract_skills(text)
-    experience_years = extract_experience_years(text)
-    education = extract_education(text)
     
     return {
         'text': text,
         'skills': skills,
-        'experience_years': experience_years,
-        'education': education,
         'success': True
     }

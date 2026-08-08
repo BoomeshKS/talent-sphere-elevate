@@ -1,0 +1,152 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}AI Analysis - Candidate Match{% endblock %}
+
+{% block content %}
+    <h2>AI Match Analysis</h2>
+    <hr>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>{{ application.candidate.username }}</h3>
+        <p><strong>Email:</strong> {{ application.candidate.email }}</p>
+        <p><strong>Job:</strong> {{ application.job.title }}</p>
+        <p><strong>Applied:</strong> {{ application.applied_at|date:"F d, Y" }}</p>
+    </div>
+    
+    <h3>AI Match Scores</h3>
+    <table width="100%" cellpadding="15">
+        <tr>
+            <td width="25%" align="center">
+                <div style="background-color: #007bff; color: white; padding: 20px; border-radius: 10px;">
+                    <h1 style="margin: 0;">{{ scores.overall_score }}%</h1>
+                    <p style="margin: 5px 0 0;">Overall Match</p>
+                </div>
+            </td>
+            <td width="25%" align="center">
+                <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 10px;">
+                    <h1 style="margin: 0;">{{ scores.skill_score }}%</h1>
+                    <p style="margin: 5px 0 0;">Skill Match</p>
+                </div>
+            </td>
+            <td width="25%" align="center">
+                <div style="background-color: #ffc107; color: #333; padding: 20px; border-radius: 10px;">
+                    <h1 style="margin: 0;">{{ scores.experience_score }}%</h1>
+                    <p style="margin: 5px 0 0;">Experience Match</p>
+                </div>
+            </td>
+            <td width="25%" align="center">
+                <div style="background-color: #17a2b8; color: white; padding: 20px; border-radius: 10px;">
+                    <h1 style="margin: 0;">{{ scores.keyword_score }}%</h1>
+                    <p style="margin: 5px 0 0;">Keyword Match</p>
+                </div>
+            </td>
+        </tr>
+    </table>
+    
+    <br>
+    
+    <div style="background-color: #d1ecf1; padding: 15px; border: 1px solid #bee5eb; border-radius: 5px;">
+        <h4 style="color: #0c5460; margin-top: 0;">AI Recommendation</h4>
+        <p style="font-size: 16px; margin: 0;">
+            {{ application.ai_recommendation|default:"Analysis pending" }}
+        </p>
+    </div>
+    
+    <br>
+    
+    <h3>Skill Match Details</h3>
+    <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+        <thead style="background-color: #f8f9fa;">
+            <tr>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Skill Category</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Candidate Skills</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job Requirements</th>
+                <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Match</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 10px;"><strong>Technical Skills</strong></td>
+                <td style="border: 1px solid #ddd; padding: 10px;">
+                    {% if application.parsed_skills %}
+                        {% with skills=application.parsed_skills.split|slice:":5" %}
+                            {% for skill in skills %}
+                                <span style="background-color: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 1px; display: inline-block;">
+                                    {{ skill|cut:"," }}
+                                </span>
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        <span style="color: #6c757d;">Not identified</span>
+                    {% endif %}
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px;">
+                    {% if application.job.required_skills %}
+                        {% with skills=application.job.required_skills.split|slice:":5" %}
+                            {% for skill in skills %}
+                                <span style="background-color: #6c757d; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 1px; display: inline-block;">
+                                    {{ skill|cut:"," }}
+                                </span>
+                            {% endfor %}
+                        {% endwith %}
+                    {% else %}
+                        <span style="color: #6c757d;">Not specified</span>
+                    {% endif %}
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                    <span style="background-color: 
+                        {% if scores.skill_score >= 70 %}#28a745
+                        {% elif scores.skill_score >= 50 %}#ffc107
+                        {% else %}#dc3545{% endif %}; 
+                        color: white; padding: 3px 10px; border-radius: 12px;">
+                        {{ scores.skill_score }}%
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 10px;"><strong>Experience</strong></td>
+                <td style="border: 1px solid #ddd; padding: 10px;">
+                    {% if application.experience_years %}
+                        {{ application.experience_years }} years
+                    {% else %}
+                        <span style="color: #6c757d;">Not identified</span>
+                    {% endif %}
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px;">
+                    {{ application.job.get_experience_level_display }}
+                </td>
+                <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                    <span style="background-color: 
+                        {% if scores.experience_score >= 70 %}#28a745
+                        {% elif scores.experience_score >= 50 %}#ffc107
+                        {% else %}#dc3545{% endif %}; 
+                        color: white; padding: 3px 10px; border-radius: 12px;">
+                        {{ scores.experience_score }}%
+                    </span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <br>
+    
+    <div style="display: flex; gap: 10px;">
+        <a href="{% url 'job_applications' application.job.id %}" style="background-color: #6c757d; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Back to Applications
+        </a>
+        <form method="POST" action="{% url 'update_application_status' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="shortlisted">
+            <button type="submit" style="background-color: #28a745; color: white; padding: 8px 20px; border: none; cursor: pointer; border-radius: 3px;">
+                Shortlist Candidate
+            </button>
+        </form>
+        <form method="POST" action="{% url 'update_application_status' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="status" value="rejected">
+            <button type="submit" style="background-color: #dc3545; color: white; padding: 8px 20px; border: none; cursor: pointer; border-radius: 3px;">
+                Reject Candidate
+            </button>
+        </form>
+    </div>
+{% endblock %}

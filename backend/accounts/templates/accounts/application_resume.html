@@ -1,4 +1,5 @@
 {% extends 'accounts/base.html' %}
+{% load custom_filters %}
 
 {% block title %}Candidate Resume{% endblock %}
 
@@ -12,6 +13,9 @@
         <p><strong>Job Applied:</strong> {{ application.job.title }}</p>
         <p><strong>Applied Date:</strong> {{ application.applied_at|date:"F d, Y" }}</p>
         <p><strong>Status:</strong> {{ application.get_status_display }}</p>
+        {% if application.match_score %}
+            <p><strong>AI Match Score:</strong> {{ application.match_score }}%</p>
+        {% endif %}
     </div>
     
     <h3>Resume Analysis</h3>
@@ -22,9 +26,21 @@
                 {% if application.parsed_skills %}
                     {% with skills=application.parsed_skills|split:',' %}
                         {% for skill in skills %}
-                            <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
-                                {{ skill|trim }}
-                            </span>
+                            {% if skill|trim %}
+                                <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                    {{ skill|trim }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
+                {% elif application.candidate.profile.skills %}
+                    {% with skills=application.candidate.profile.skills|split:',' %}
+                        {% for skill in skills %}
+                            {% if skill|trim %}
+                                <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                    {{ skill|trim }}
+                                </span>
+                            {% endif %}
                         {% endfor %}
                     {% endwith %}
                 {% else %}
@@ -33,33 +49,37 @@
             </td>
         </tr>
         <tr>
-            <td><strong>Experience:</strong></td>
+            <td><strong>Experience Years:</strong></td>
             <td>
                 {% if application.experience_years %}
                     {{ application.experience_years }} years
+                {% elif application.candidate.profile.experience_years %}
+                    {{ application.candidate.profile.experience_years }} years
                 {% else %}
-                    <span style="color: #6c757d;">Not identified</span>
+                    <span style="color: #6c757d;">Not provided</span>
                 {% endif %}
             </td>
         </tr>
+        {% if application.cover_letter %}
         <tr>
-            <td><strong>Education:</strong></td>
+            <td><strong>Cover Letter:</strong></td>
             <td>
-                {% if application.parsed_education %}
-                    <pre style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 0; white-space: pre-wrap; font-size: 12px;">
-                        {{ application.parsed_education }}
-                    </pre>
-                {% else %}
-                    <span style="color: #6c757d;">Not identified</span>
-                {% endif %}
+                <div style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; font-size: 13px;">
+                    {{ application.cover_letter }}
+                </div>
             </td>
         </tr>
+        {% endif %}
         <tr>
             <td><strong>Resume Preview:</strong></td>
             <td>
                 {% if application.resume_text %}
                     <div style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; max-height: 300px; overflow-y: scroll; white-space: pre-wrap; font-size: 12px;">
                         {{ application.resume_text|truncatewords:200 }}
+                    </div>
+                {% elif application.candidate.profile.resume_text %}
+                    <div style="background-color: white; padding: 10px; border: 1px solid #ddd; border-radius: 5px; max-height: 300px; overflow-y: scroll; white-space: pre-wrap; font-size: 12px;">
+                        {{ application.candidate.profile.resume_text|truncatewords:200 }}
                     </div>
                 {% else %}
                     <span style="color: #6c757d;">No text extracted</span>
@@ -69,10 +89,50 @@
     </table>
     
     <br>
-    <a href="{% url 'job_applications' application.job.id %}" style="background-color: #6c757d; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
-        Back to Applications
-    </a>
-    <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 8px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 3px;">
-        Dashboard
-    </a>
+    
+    {% if application.match_score %}
+    <div style="background-color: #d1ecf1; padding: 15px; border: 1px solid #bee5eb; border-radius: 5px;">
+        <h4 style="color: #0c5460; margin-top: 0;">AI Analysis Summary</h4>
+        <table width="100%">
+            <tr>
+                <td><strong>Overall Match:</strong> {{ application.match_score }}%</td>
+                <td><strong>Skill Match:</strong> {{ application.skill_match_score }}%</td>
+                <td><strong>Experience Match:</strong> {{ application.experience_match_score }}%</td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <strong>Recommendation:</strong> {{ application.ai_recommendation|default:"Analysis pending" }}
+                </td>
+            </tr>
+        </table>
+    </div>
+    <br>
+    {% endif %}
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'job_applications' application.job.id %}" style="background-color: #6c757d; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Back to Applications
+        </a>
+        <a href="{% url 'analyze_application' application.id %}" style="background-color: #007bff; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Full AI Analysis
+        </a>
+        {% if application.job.created_by == user %}
+        <form method="POST" action="{% url 'update_application_status' application.id %}" style="display: inline;">
+            {% csrf_token %}
+            <select name="status" style="padding: 6px;">
+                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="reviewed" {% if application.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                <option value="interview" {% if application.status == 'interview' %}selected{% endif %}>Interview</option>
+                <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+            <button type="submit" style="background-color: #28a745; color: white; padding: 6px 15px; border: none; cursor: pointer; border-radius: 3px;">
+                Update Status
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
 {% endblock %}

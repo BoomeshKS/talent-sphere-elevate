@@ -1,4 +1,5 @@
 {% extends 'accounts/base.html' %}
+{% load custom_filters %}
 
 {% block title %}My Resume Data{% endblock %}
 
@@ -9,6 +10,9 @@
     <div style="margin-bottom: 20px;">
         <a href="{% url 'upload_resume' %}" style="background-color: #007bff; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
             Update Resume
+        </a>
+        <a href="{% url 'job_recommendations' %}" style="margin-left: 10px; background-color: #17a2b8; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Get Job Recommendations
         </a>
     </div>
     
@@ -28,12 +32,16 @@
         <tr>
             <td><strong>Skills Extracted:</strong></td>
             <td>
-                {% if skills %}
-                    {% for skill in skills %}
-                        <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
-                            {{ skill }}
-                        </span>
-                    {% endfor %}
+                {% if profile.skills %}
+                    {% with skills=profile.skills|split:',' %}
+                        {% for skill in skills %}
+                            {% if skill|trim %}
+                                <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                    {{ skill|trim }}
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    {% endwith %}
                 {% else %}
                     <span style="color: #6c757d;">No skills extracted yet</span>
                 {% endif %}
@@ -45,7 +53,7 @@
                 {% if profile.experience_years %}
                     {{ profile.experience_years }} years
                 {% else %}
-                    <span style="color: #6c757d;">Not extracted yet</span>
+                    <span style="color: #6c757d;">Not entered yet</span>
                 {% endif %}
             </td>
         </tr>

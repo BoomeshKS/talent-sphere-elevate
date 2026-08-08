@@ -15,8 +15,14 @@ urlpatterns = [
     path('job/<int:job_id>/applications/', views.job_applications, name='job_applications'),
     path('application/<int:application_id>/update/', views.update_application_status, name='update_application_status'),
     path('my-applications/', views.my_applications, name='my_applications'),
-
     path('upload-resume/', views.upload_resume, name='upload_resume'),
     path('view-resume/', views.view_resume, name='view_resume'),
     path('application/<int:application_id>/resume/', views.parse_application_resume, name='application_resume'),
+    
+    path('application/<int:application_id>/analyze/', views.analyze_application, name='analyze_application'),
+    path('job/<int:job_id>/rank/', views.rank_job_applications, name='rank_job_applications'),
+    path('job/<int:job_id>/bulk-analyze/', views.bulk_analyze_applications, name='bulk_analyze_applications'),
+    path('job-recommendations/', views.job_recommendations, name='job_recommendations'),
+    
+    path('update-resume-data/', views.update_resume_data, name='update_resume_data'),
 ]

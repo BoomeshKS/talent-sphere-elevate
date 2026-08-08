@@ -10,6 +10,9 @@
         <a href="{% url 'create_job' %}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 3px;">
             + Post New Job
         </a>
+        <span style="margin-left: 15px; color: #6c757d;">
+            Total Jobs: <strong>{{ jobs.count }}</strong>
+        </span>
     </div>
     
     {% if jobs %}
@@ -18,9 +21,10 @@
                 <tr>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job Title</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Company</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Posted By</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Location</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
-                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Applications</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Applications</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
                 </tr>
             </thead>
@@ -31,6 +35,11 @@
                         <strong>{{ job.title }}</strong>
                     </td>
                     <td style="border: 1px solid #ddd; padding: 10px;">{{ job.company }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <span style="background-color: #6c757d; color: white; padding: 2px 10px; border-radius: 10px; font-size: 12px;">
+                            {{ job.created_by.username }}
+                        </span>
+                    </td>
                     <td style="border: 1px solid #ddd; padding: 10px;">{{ job.location }}</td>
                     <td style="border: 1px solid #ddd; padding: 10px;">
                         <span style="background-color: 
@@ -41,10 +50,20 @@
                             {{ job.get_status_display }}
                         </span>
                     </td>
-                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">0</td>
                     <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
-                        <a href="{% url 'job_detail' job.id %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                        <a href="{% url 'job_applications' job.id %}" style="color: #007bff;">
+                            {{ job.applications.count }}
+                        </a>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <a href="{% url 'job_detail' job.id %}" style="background-color: #007bff; color: white; padding: 3px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;">
                             View
+                        </a>
+                        <a href="{% url 'job_applications' job.id %}" style="background-color: #28a745; color: white; padding: 3px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            Applicants
+                        </a>
+                        <a href="{% url 'rank_job_applications' job.id %}" style="background-color: #17a2b8; color: white; padding: 3px 10px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            AI Rank
                         </a>
                     </td>
                 </tr>

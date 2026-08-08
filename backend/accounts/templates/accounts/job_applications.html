@@ -24,6 +24,7 @@
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Applied Date</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">AI Match</th>
                 </tr>
             </thead>
             <tbody>
@@ -83,6 +84,26 @@
                                 </button>
                             </form>
                         </div>
+                    </td>
+
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        {% if application.match_score %}
+                            <span style="background-color: 
+                                {% if application.match_score >= 70 %}#28a745
+                                {% elif application.match_score >= 50 %}#ffc107
+                                {% else %}#dc3545{% endif %}; 
+                                color: white; padding: 3px 10px; border-radius: 12px;">
+                                {{ application.match_score }}%
+                            </span>
+                            <br>
+                            <a href="{% url 'analyze_application' application.id %}" style="color: #007bff; font-size: 11px;">
+                                View Analysis
+                            </a>
+                        {% else %}
+                            <a href="{% url 'analyze_application' application.id %}" style="background-color: #007bff; color: white; padding: 3px 10px; text-decoration: none; border-radius: 3px; font-size: 11px;">
+                                Analyze
+                            </a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

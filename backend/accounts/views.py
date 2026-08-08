@@ -5,6 +5,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import UserProfile, Job, JobApplication
 from .resume_parser import parse_resume
+from .matching_engine import calculate_match_score, rank_candidates, auto_rank_and_update
+
 
 def register(request):
     if request.user.is_authenticated:
@@ -274,6 +276,8 @@ def upload_resume(request):
     
     if request.method == 'POST':
         resume_file = request.FILES.get('resume')
+        manual_experience = request.POST.get('manual_experience', '')
+        manual_skills = request.POST.get('manual_skills', '')
         
         if not resume_file:
             messages.error(request, 'Please select a file to upload!')
@@ -292,34 +296,42 @@ def upload_resume(request):
         try:
             parsed_data = parse_resume(resume_file)
             
-            if parsed_data['success']:
-                profile = request.user.profile
-                profile.resume = resume_file
-                profile.resume_text = parsed_data['text'][:5000]  
-                profile.skills = ', '.join(parsed_data['skills'])
-                profile.experience_years = parsed_data['experience_years']
-                profile.save()
-                
-                messages.success(
-                    request, 
-                    f'Resume uploaded and parsed successfully! '
-                    f'Found {len(parsed_data["skills"])} skills and {parsed_data["experience_years"]} years of experience.'
-                )
-                
-                return render(request, 'accounts/upload_resume.html', {
-                    'parsed_data': parsed_data,
-                    'success': True
-                })
+            profile = request.user.profile
+            profile.resume = resume_file
+            profile.resume_text = parsed_data['text'][:5000]
+            
+            if manual_skills:
+                skills_list = [s.strip() for s in manual_skills.split(',') if s.strip()]
             else:
-                profile = request.user.profile
-                profile.resume = resume_file
-                profile.save()
-                messages.warning(request, 'Resume uploaded but could not be parsed. Please try a different format.')
-                
+                skills_list = parsed_data['skills']
+            
+            profile.skills = ', '.join(skills_list)
+            profile.experience_years = 0
+            profile.save()
+            
+            applications = JobApplication.objects.filter(candidate=request.user)
+            for app in applications:
+                app.parsed_skills = profile.skills
+                app.resume_text = profile.resume_text
+                app.save()
+            
+            messages.success(
+                request, 
+                f'Resume uploaded successfully! Found {len(skills_list)} skills.'
+            )
+            
+            return render(request, 'accounts/upload_resume.html', {
+                'parsed_data': parsed_data,
+                'success': True,
+                'manual_skills': manual_skills
+            })
+            
         except Exception as e:
             messages.error(request, f'Error uploading resume: {str(e)}')
+            return render(request, 'accounts/upload_resume.html')
     
     return render(request, 'accounts/upload_resume.html')
+
 
 @login_required
 def view_resume(request):
@@ -346,3 +358,182 @@ def parse_application_resume(request, application_id):
     return render(request, 'accounts/application_resume.html', {
         'application': application
     })
+
+
+@login_required
+def analyze_application(request, application_id):
+    application = get_object_or_404(JobApplication, id=application_id)
+    
+    if application.job.created_by != request.user:
+        messages.error(request, 'You are not authorized to view this!')
+        return redirect('dashboard')
+    
+    scores = calculate_match_score(application)
+    
+    application.match_score = scores['overall_score']
+    application.skill_match_score = scores['skill_score']
+    application.experience_match_score = scores['experience_score']
+    application.ai_recommendation = generate_recommendation(scores)
+    application.save()
+    
+    return render(request, 'accounts/application_analysis.html', {
+        'application': application,
+        'scores': scores
+    })
+
+
+@login_required
+def rank_job_applications(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    
+    if job.created_by != request.user:
+        messages.error(request, 'You are not authorized to view this!')
+        return redirect('dashboard')
+    
+    ranked_applications = auto_rank_and_update(job_id)
+    
+    return render(request, 'accounts/ranked_applications.html', {
+        'job': job,
+        'ranked_applications': ranked_applications
+    })
+
+
+@login_required
+def bulk_analyze_applications(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    
+    if job.created_by != request.user:
+        messages.error(request, 'You are not authorized to view this!')
+        return redirect('dashboard')
+    
+    applications = JobApplication.objects.filter(job=job)
+    total = applications.count()
+    analyzed = 0
+    matches = []
+    
+    for application in applications:
+        scores = calculate_match_score(application)
+        application.match_score = scores['overall_score']
+        application.skill_match_score = scores['skill_score']
+        application.experience_match_score = scores['experience_score']
+        application.ai_recommendation = generate_recommendation(scores)
+        application.save()
+        
+        matches.append({
+            'application': application,
+            'scores': scores
+        })
+        analyzed += 1
+    
+    matches.sort(key=lambda x: x['scores']['overall_score'], reverse=True)
+    
+    messages.success(
+        request, 
+        f'Successfully analyzed {analyzed} out of {total} applications!'
+    )
+    
+    return render(request, 'accounts/bulk_analysis.html', {
+        'job': job,
+        'matches': matches,
+        'total': total,
+        'analyzed': analyzed
+    })
+
+
+@login_required
+def job_recommendations(request):
+    if request.user.profile.role != 'candidate':
+        messages.error(request, 'Access denied!')
+        return redirect('dashboard')
+    
+    candidate = request.user
+    profile = candidate.profile
+    active_jobs = Job.objects.filter(status='active')
+    
+    recommendations = []
+    
+    for job in active_jobs:
+        if JobApplication.objects.filter(job=job, candidate=candidate).exists():
+            continue
+        
+        if not profile.skills or not profile.experience_years:
+            continue
+        
+        temp_app = JobApplication(
+            job=job,
+            candidate=candidate,
+            parsed_skills=profile.skills,
+            experience_years=profile.experience_years,
+            resume_text=profile.resume_text or ""
+        )
+        
+        scores = calculate_match_score(temp_app)
+        
+        if scores['overall_score'] >= 50:
+            recommendations.append({
+                'job': job,
+                'scores': scores
+            })
+    
+    recommendations.sort(key=lambda x: x['scores']['overall_score'], reverse=True)
+    
+    return render(request, 'accounts/job_recommendations.html', {
+        'recommendations': recommendations[:10]
+    })
+
+
+@login_required
+def update_resume_data(request):
+    if request.user.profile.role != 'candidate':
+        messages.error(request, 'Access denied!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        profile = request.user.profile
+        skills = request.POST.get('skills', '')
+        experience_years = request.POST.get('experience_years', '')
+        
+        if skills:
+            skills_list = [s.strip() for s in skills.split(',') if s.strip()]
+            profile.skills = ', '.join(skills_list)
+        
+        if not experience_years:
+            messages.error(request, 'Please enter your years of experience!')
+            return redirect('view_resume')
+        
+        try:
+            profile.experience_years = float(experience_years)
+        except:
+            messages.error(request, 'Please enter a valid number for experience years!')
+            return redirect('view_resume')
+        
+        profile.save()
+        
+        applications = JobApplication.objects.filter(candidate=request.user)
+        for app in applications:
+            app.parsed_skills = profile.skills
+            app.experience_years = int(profile.experience_years) if profile.experience_years else None
+            app.resume_text = profile.resume_text
+            app.save()
+        
+        messages.success(request, 'Resume data updated successfully!')
+        return redirect('view_resume')
+    
+    return redirect('view_resume')
+
+
+
+
+def generate_recommendation(scores):
+    overall = scores['overall_score']
+    
+    if overall >= 85:
+        return "Highly Recommended - Excellent match for this position"
+    elif overall >= 70:
+        return "Recommended - Good match, suitable for this position"
+    elif overall >= 55:
+        return "Potentially Suitable - Consider for interview"
+    elif overall >= 40:
+        return "Average Match - May need additional training"
+    else:
+        return "Not Recommended - Low match score"

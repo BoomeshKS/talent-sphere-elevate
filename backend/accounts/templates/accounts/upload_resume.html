@@ -1,4 +1,5 @@
 {% extends 'accounts/base.html' %}
+{% load custom_filters %}
 
 {% block title %}Upload Resume{% endblock %}
 
@@ -8,7 +9,7 @@
     
     {% if success %}
         <div style="background-color: #d4edda; padding: 15px; border: 1px solid #c3e6cb; border-radius: 5px; margin-bottom: 20px;">
-            <h3 style="color: #155724; margin-top: 0;">Resume Parsed Successfully!</h3>
+            <h3 style="color: #155724; margin-top: 0;">Resume Uploaded Successfully!</h3>
             
             <table width="100%" cellpadding="8">
                 <tr>
@@ -25,21 +26,47 @@
                         {% endif %}
                     </td>
                 </tr>
-                <tr>
-                    <td><strong>Experience Years:</strong></td>
-                    <td>{{ parsed_data.experience_years }} years</td>
-                </tr>
-                <tr>
-                    <td><strong>Education:</strong></td>
-                    <td>
-                        {% if parsed_data.education %}
-                            <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin: 0; white-space: pre-wrap;">{{ parsed_data.education }}</pre>
-                        {% else %}
-                            <span style="color: #6c757d;">Not identified</span>
-                        {% endif %}
-                    </td>
-                </tr>
             </table>
+            
+            <br>
+            
+            <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeaa7; border-radius: 5px;">
+                <h4 style="color: #856404; margin-top: 0;">Add Experience & Correct Skills</h4>
+                <p style="color: #856404;">Please add your experience years and correct skills if needed:</p>
+                
+                <form method="POST" action="{% url 'update_resume_data' %}">
+                    {% csrf_token %}
+                    <table width="100%">
+                        <tr>
+                            <td width="30%"><label><strong>Skills (comma separated):</strong></label></td>
+                            <td>
+                                <input type="text" name="skills" value="{{ parsed_data.skills|join:', ' }}" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                                <small style="color: #6c757d;">Example: Python, Django, AWS, SQL</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><label><strong>Experience (years):</strong></label></td>
+                            <td>
+                                <input type="number" name="experience_years" 
+                                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;" 
+                                       step="0.5" placeholder="Enter total years of experience" required>
+                                <small style="color: #ff6b6b; font-weight: bold;">Required: Please enter your total years of experience</small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" align="center" style="padding-top: 15px;">
+                                <button type="submit" style="background-color: #007bff; color: white; padding: 8px 30px; border: none; cursor: pointer; border-radius: 3px; font-size: 14px;">
+                                    Save Information
+                                </button>
+                                <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 8px 30px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 3px;">
+                                    Skip
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </form>
+            </div>
             
             <br>
             <a href="{% url 'dashboard' %}" style="background-color: #28a745; color: white; padding: 10px 30px; text-decoration: none; border-radius: 5px;">
@@ -51,16 +78,15 @@
         </div>
     
     {% else %}
-        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
-            <p><strong>Instructions:</strong></p>
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px;">
+            <h4>Instructions:</h4>
             <ul>
                 <li>Upload your resume in PDF, DOCX, DOC, or TXT format</li>
                 <li>File size should be less than 5MB</li>
-                <li>The system will automatically extract your skills, experience, and education</li>
+                <li>Skills will be automatically extracted from your resume</li>
+                <li><strong>You will need to manually enter your years of experience</strong> after upload</li>
             </ul>
         </div>
-        
-        <br>
         
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
@@ -68,12 +94,11 @@
                 <tr>
                     <td width="20%"><label><strong>Select Resume:</strong></label></td>
                     <td width="80%">
-                        <input type="file" name="resume" accept=".pdf,.docx,.doc,.txt" required style="width: 100%; padding: 8px; border: 1px solid #ccc;">
+                        <input type="file" name="resume" accept=".pdf,.docx,.doc,.txt" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="2" align="center">
-                        <br>
+                    <td colspan="2" align="center" style="padding-top: 15px;">
                         <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
                             Upload & Parse Resume
                         </button>

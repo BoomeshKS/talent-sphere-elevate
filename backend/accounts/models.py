@@ -14,9 +14,9 @@ class UserProfile(models.Model):
     phone = models.CharField(max_length=15, blank=True, null=True)
     company = models.CharField(max_length=100, blank=True, null=True)
     resume = models.FileField(upload_to='resumes/', blank=True, null=True)
-    resume_text = models.TextField(blank=True, null=True)  # Store extracted text
-    skills = models.TextField(blank=True, null=True)  # Store extracted skills
-    experience_years = models.IntegerField(null=True, blank=True)  # Extracted experience
+    resume_text = models.TextField(blank=True, null=True) 
+    skills = models.TextField(blank=True, null=True)  
+    experience_years = models.IntegerField(null=True, blank=True) 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

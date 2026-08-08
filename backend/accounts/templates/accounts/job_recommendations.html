@@ -1,0 +1,91 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Job Recommendations{% endblock %}
+
+{% block content %}
+    <h2>AI Job Recommendations</h2>
+    <hr>
+    
+    <div style="background-color: #d1ecf1; padding: 15px; border: 1px solid #bee5eb; border-radius: 5px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #0c5460;">
+            Based on your skills and experience, we have found the following job recommendations for you.
+        </p>
+    </div>
+    
+    {% if recommendations %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Match</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job Title</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Company</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Location</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Skills</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Experience</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in recommendations %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <span style="background-color: 
+                            {% if item.scores.overall_score >= 70 %}#28a745
+                            {% elif item.scores.overall_score >= 50 %}#ffc107
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 5px 10px; border-radius: 12px; font-weight: bold;">
+                            {{ item.scores.overall_score }}%
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <strong>{{ item.job.title }}</strong>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ item.job.company }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ item.job.location }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <span style="background-color: 
+                            {% if item.scores.skill_score >= 70 %}#28a745
+                            {% elif item.scores.skill_score >= 50 %}#ffc107
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px;">
+                            {{ item.scores.skill_score }}%
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <span style="background-color: 
+                            {% if item.scores.experience_score >= 70 %}#28a745
+                            {% elif item.scores.experience_score >= 50 %}#ffc107
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px;">
+                            {{ item.scores.experience_score }}%
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <a href="{% url 'job_detail' item.job.id %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; display: inline-block; margin-bottom: 3px;">
+                            View Job
+                        </a>
+                        <br>
+                        <a href="{% url 'apply_job' item.job.id %}" style="background-color: #28a745; color: white; padding: 3px 15px; text-decoration: none; border-radius: 3px; font-size: 12px; display: inline-block;">
+                            Apply Now
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div style="text-align: center; padding: 60px; background-color: #f8f9fa; border-radius: 5px;">
+            <h3 style="color: #6c757d;">No Job Recommendations Available</h3>
+            <p style="color: #6c757d;">
+                Please upload your resume first so we can analyze your skills and find suitable jobs.
+            </p>
+            <br>
+            <a href="{% url 'upload_resume' %}" style="background-color: #007bff; color: white; padding: 10px 30px; text-decoration: none; border-radius: 5px;">
+                Upload Resume
+            </a>
+        </div>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

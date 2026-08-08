@@ -30,24 +30,58 @@
             <tr>
                 <td><label><strong>Description:</strong></label></td>
                 <td>
-                    <textarea name="description" required rows="5" style="width: 100%; padding: 8px;"></textarea>
+                    <textarea name="description" required rows="5" style="width: 100%; padding: 8px;" placeholder="Describe the job role, responsibilities, and what the candidate will do..."></textarea>
                 </td>
             </tr>
             <tr>
                 <td><label><strong>Requirements:</strong></label></td>
                 <td>
-                    <textarea name="requirements" required rows="5" style="width: 100%; padding: 8px;"></textarea>
+                    <textarea name="requirements" required rows="5" style="width: 100%; padding: 8px;" placeholder="List the requirements, qualifications, and skills needed..."></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Required Skills:</strong></label></td>
+                <td>
+                    <div style="background-color: #f8f9fa; padding: 15px; border: 2px dashed #007bff; border-radius: 5px;">
+                        <p style="margin: 0 0 10px; color: #6c757d; font-size: 14px;">
+                            <strong>Add Skills:</strong> Type a skill and click "Add Skill" button. 
+                            Skills will appear as tags below.
+                        </p>
+                        
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <input type="text" id="skillInput" placeholder="e.g., Python, Django, AWS..." 
+                                   style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                            <button type="button" onclick="addSkill()" 
+                                    style="background-color: #007bff; color: white; padding: 8px 20px; border: none; cursor: pointer; border-radius: 3px;">
+                                Add Skill
+                            </button>
+                            <button type="button" onclick="removeAllSkills()" 
+                                    style="background-color: #dc3545; color: white; padding: 8px 20px; border: none; cursor: pointer; border-radius: 3px;">
+                                Clear All
+                            </button>
+                        </div>
+                        
+                        <div id="skillsContainer" style="min-height: 40px; padding: 5px; border: 1px solid #ddd; border-radius: 3px; background-color: white;">
+                            <!-- Skills will appear here as tags -->
+                        </div>
+                        
+                        <input type="hidden" name="required_skills" id="requiredSkillsInput">
+                        
+                        <div style="margin-top: 10px; font-size: 12px; color: #6c757d;">
+                            <strong>Note:</strong> Skills will be used for AI matching. Add all required technical and soft skills.
+                        </div>
+                    </div>
                 </td>
             </tr>
             <tr>
                 <td><label><strong>Experience Level:</strong></label></td>
                 <td>
                     <select name="experience_level" style="width: 100%; padding: 8px;">
-                        <option value="entry">Entry Level</option>
-                        <option value="mid" selected>Mid Level</option>
-                        <option value="senior">Senior Level</option>
-                        <option value="lead">Lead</option>
-                        <option value="executive">Executive</option>
+                        <option value="entry">Entry Level (0-2 years)</option>
+                        <option value="mid" selected>Mid Level (2-5 years)</option>
+                        <option value="senior">Senior Level (5-8 years)</option>
+                        <option value="lead">Lead (8-12 years)</option>
+                        <option value="executive">Executive (12+ years)</option>
                     </select>
                 </td>
             </tr>
@@ -71,23 +105,100 @@
                 <td><label><strong>Status:</strong></label></td>
                 <td>
                     <select name="status" style="width: 100%; padding: 8px;">
-                        <option value="active">Active</option>
-                        <option value="draft">Draft</option>
-                        <option value="closed">Closed</option>
+                        <option value="active">Active - Visible to candidates</option>
+                        <option value="draft">Draft - Not visible</option>
+                        <option value="closed">Closed - No longer accepting applications</option>
                     </select>
                 </td>
             </tr>
             <tr>
                 <td colspan="2" align="center">
                     <br>
-                    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px;">
+                    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
                         Post Job
                     </button>
-                    <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none;">
+                    <a href="{% url 'dashboard' %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
                         Cancel
                     </a>
                 </td>
             </tr>
         </table>
     </form>
+    
+    <script>
+        let skills = [];
+        
+        function addSkill() {
+            const input = document.getElementById('skillInput');
+            const skill = input.value.trim();
+            
+            if (skill === '') {
+                alert('Please enter a skill!');
+                return;
+            }
+            
+            if (skills.includes(skill)) {
+                alert('This skill is already added!');
+                return;
+            }
+            
+            skills.push(skill);
+            input.value = '';
+            updateSkillsDisplay();
+            updateHiddenInput();
+        }
+        
+        function removeSkill(skill) {
+            skills = skills.filter(s => s !== skill);
+            updateSkillsDisplay();
+            updateHiddenInput();
+        }
+        
+        function removeAllSkills() {
+            if (confirm('Are you sure you want to remove all skills?')) {
+                skills = [];
+                updateSkillsDisplay();
+                updateHiddenInput();
+            }
+        }
+        
+        function updateSkillsDisplay() {
+            const container = document.getElementById('skillsContainer');
+            container.innerHTML = '';
+            
+            if (skills.length === 0) {
+                container.innerHTML = '<p style="color: #6c757d; margin: 5px; font-size: 14px;">No skills added yet. Add skills using the input above.</p>';
+                return;
+            }
+            
+            skills.forEach(skill => {
+                const tag = document.createElement('span');
+                tag.style.cssText = `
+                    background-color: #007bff;
+                    color: white;
+                    padding: 5px 12px;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    margin: 3px;
+                    display: inline-block;
+                    cursor: pointer;
+                `;
+                tag.innerHTML = `${skill} <span style="margin-left: 5px; font-weight: bold;" onclick="removeSkill('${skill}')">×</span>`;
+                container.appendChild(tag);
+            });
+        }
+        
+        function updateHiddenInput() {
+            document.getElementById('requiredSkillsInput').value = skills.join(', ');
+        }
+        
+        document.getElementById('skillInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill();
+            }
+        });
+        
+        updateSkillsDisplay();
+    </script>
 {% endblock %}
