@@ -1,4 +1,5 @@
 {% extends 'accounts/base.html' %}
+{% load custom_filters %}
 
 {% block title %}Job Details{% endblock %}
 
@@ -19,7 +20,7 @@
             <td><strong>Experience Level:</strong></td>
             <td>
                 <span style="background-color: #17a2b8; color: white; padding: 3px 10px; border-radius: 12px; font-size: 14px;">
-                    {{ job.get_experience_level_display }}
+                    {{ job.get_experience_level_display }} ({{ experience_range }})
                 </span>
             </td>
         </tr>
@@ -27,12 +28,28 @@
             <td><strong>Required Skills:</strong></td>
             <td>
                 {% if job.required_skills %}
-                    {% with skills=job.required_skills|cut:" "|cut:"," %}
-                        {% for skill in job.required_skills|cut:","|cut:" "|split:"," %}
-                            {% if skill %}
-                                <span style="background-color: #007bff; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
-                                    {{ skill }}
-                                </span>
+                    {% with skills=job.required_skills|split:',' %}
+                        {% for skill in skills %}
+                            {% if skill|trim %}
+                                {% if user.profile.role == 'candidate' %}
+                                    {% if skill|trim in matched_skills %}
+                                        <span style="background-color: #28a745; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                            {{ skill|trim }} ✓
+                                        </span>
+                                    {% elif skill|trim in missing_skills %}
+                                        <span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                            {{ skill|trim }} ✗
+                                        </span>
+                                    {% else %}
+                                        <span style="background-color: #6c757d; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                            {{ skill|trim }}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span style="background-color: #007bff; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                                        {{ skill|trim }}
+                                    </span>
+                                {% endif %}
                             {% endif %}
                         {% endfor %}
                     {% endwith %}
@@ -41,6 +58,22 @@
                 {% endif %}
             </td>
         </tr>
+        
+        {% if user.profile.role == 'candidate' and missing_skills %}
+        <tr>
+            <td><strong>Missing Skills:</strong></td>
+            <td>
+                {% for skill in missing_skills %}
+                    <span style="background-color: #dc3545; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; margin: 2px; display: inline-block;">
+                        {{ skill }} ✗
+                    </span>
+                {% endfor %}
+                <br>
+                <small style="color: #6c757d;">You need to learn these skills to be a better match</small>
+            </td>
+        </tr>
+        {% endif %}
+        
         <tr>
             <td><strong>Salary Range:</strong></td>
             <td>

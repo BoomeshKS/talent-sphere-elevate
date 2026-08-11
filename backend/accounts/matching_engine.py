@@ -4,22 +4,20 @@ from .models import Job, JobApplication
 def calculate_match_score(application):
     job = application.job
     candidate = application.candidate
+    profile = candidate.profile
     
-    candidate_skills = application.parsed_skills or ""
-    candidate_experience = application.experience_years or 0
-    job_requirements = job.requirements or ""
+    candidate_skills = application.parsed_skills or profile.skills or ""
+    candidate_experience = application.experience_years or profile.experience_years or 0
     job_skills = job.required_skills or ""
+    job_requirements = job.requirements or ""
+    job_description = job.description or ""
     
-    skill_score = calculate_skill_match(candidate_skills, job_skills)
-    
+    skill_score = calculate_skill_match(candidate_skills, job_skills, job_requirements, job_description)
     experience_score = calculate_experience_match(candidate_experience, job.experience_level)
     
-    keyword_score = calculate_keyword_match(application.resume_text or "", job_requirements)
-    
     overall_score = (
-        skill_score * 0.40 +
-        experience_score * 0.35 +
-        keyword_score * 0.25
+        skill_score * 0.60 +
+        experience_score * 0.40
     )
     
     overall_score = int(round(overall_score))
@@ -28,33 +26,79 @@ def calculate_match_score(application):
         'overall_score': min(overall_score, 100),
         'skill_score': int(round(skill_score)),
         'experience_score': int(round(experience_score)),
-        'keyword_score': int(round(keyword_score))
+        'keyword_score': int(round(skill_score))
     }
 
-def calculate_skill_match(candidate_skills, job_skills):
-    if not candidate_skills or not job_skills:
+def calculate_skill_match(candidate_skills, job_skills, job_requirements, job_description):
+    if not candidate_skills:
         return 0
     
     candidate_list = [s.strip().lower() for s in candidate_skills.split(',') if s.strip()]
-    job_list = [s.strip().lower() for s in job_skills.split(',') if s.strip()]
     
-    if not job_list:
-        return 50  
+    if not candidate_list:
+        return 0
     
-    matched_skills = set(candidate_list) & set(job_list)
+    job_skill_list = []
     
-    match_percentage = (len(matched_skills) / len(job_list)) * 100
+    if job_skills:
+        job_skill_list.extend([s.strip().lower() for s in job_skills.split(',') if s.strip()])
+    
+    if job_requirements:
+        extracted = extract_keywords(job_requirements)
+        job_skill_list.extend(extracted)
+    
+    if job_description:
+        extracted = extract_keywords(job_description)
+        job_skill_list.extend(extracted)
+    
+    job_skill_list = list(set(job_skill_list))
+    
+    if not job_skill_list:
+        return 50
+    
+    matched_skills = []
+    missing_skills = []
+    
+    for skill in job_skill_list:
+        found = False
+        for candidate_skill in candidate_list:
+            if skill in candidate_skill or candidate_skill in skill:
+                matched_skills.append(skill)
+                found = True
+                break
+        if not found:
+            missing_skills.append(skill)
+    
+    match_percentage = (len(matched_skills) / len(job_skill_list)) * 100
     
     return min(match_percentage, 100)
 
-def calculate_experience_match(candidate_years, job_level):
+def extract_keywords(text):
+    stopwords = {
+        'a', 'an', 'the', 'of', 'for', 'with', 'to', 'from', 'by',
+        'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been',
+        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
+        'could', 'should', 'may', 'might', 'must', 'shall', 'than', 'then',
+        'into', 'upon', 'about', 'after', 'before', 'between', 'under', 'over'
+    }
+    
+    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+    
+    keywords = [word for word in words if word not in stopwords]
+    
+    from collections import Counter
+    word_freq = Counter(keywords)
+    top_keywords = [word for word, count in word_freq.most_common(30)]
+    
+    return top_keywords
 
+def calculate_experience_match(candidate_years, job_level):
     level_requirements = {
-        'entry': (0, 2),
-        'mid': (2, 5),
-        'senior': (5, 8),
-        'lead': (8, 12),
-        'executive': (12, 20)
+        'entry': (0, 1),
+        'mid': (2, 4),
+        'senior': (5, 7),
+        'lead': (8, 10),
+        'executive': (11, 20)
     }
     
     if job_level not in level_requirements:
@@ -68,50 +112,64 @@ def calculate_experience_match(candidate_years, job_level):
     if candidate_years >= min_exp and candidate_years <= max_exp:
         return 100
     elif candidate_years < min_exp:
-        return (candidate_years / min_exp) * 100
+        return (candidate_years / min_exp) * 100 if min_exp > 0 else 0
     else:
         if candidate_years <= max_exp * 1.5:
             return 100
         else:
             return 80
 
-def calculate_keyword_match(candidate_text, job_requirements):
-    if not candidate_text or not job_requirements:
-        return 0
-    
-    job_keywords = extract_keywords(job_requirements)
-    
-    if not job_keywords:
-        return 50
-    
-    candidate_text_lower = candidate_text.lower()
-    matched_count = 0
-    
-    for keyword in job_keywords:
-        if keyword.lower() in candidate_text_lower:
-            matched_count += 1
-    
-    match_percentage = (matched_count / len(job_keywords)) * 100
-    
-    return min(match_percentage, 100)
-
-def extract_keywords(text):
-    stopwords = {
-        'a', 'an', 'the', 'of', 'for', 'with', 'to', 'from', 'by',
-        'and', 'or', 'but', 'is', 'are', 'was', 'were', 'be', 'been',
-        'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would',
-        'could', 'should', 'may', 'might', 'must', 'shall'
+def get_experience_range(job_level):
+    level_requirements = {
+        'entry': '0-1 years',
+        'mid': '2-4 years',
+        'senior': '5-7 years',
+        'lead': '8-10 years',
+        'executive': '11+ years'
     }
+    return level_requirements.get(job_level, 'Not specified')
+
+def get_matched_and_missing_skills(candidate_skills, job):
+    if not candidate_skills:
+        return [], []
     
-    words = re.findall(r'\b[a-zA-Z]{3,}\b', text.lower())
+    candidate_list = [s.strip().lower() for s in candidate_skills.split(',') if s.strip()]
     
-    keywords = [word for word in words if word not in stopwords]
+    if not candidate_list:
+        return [], []
     
-    from collections import Counter
-    word_freq = Counter(keywords)
-    top_keywords = [word for word, count in word_freq.most_common(20)]
+    job_skill_list = []
     
-    return top_keywords
+    if job.required_skills:
+        job_skill_list.extend([s.strip().lower() for s in job.required_skills.split(',') if s.strip()])
+    
+    if job.requirements:
+        extracted = extract_keywords(job.requirements)
+        job_skill_list.extend(extracted)
+    
+    if job.description:
+        extracted = extract_keywords(job.description)
+        job_skill_list.extend(extracted)
+    
+    job_skill_list = list(set(job_skill_list))[:20]
+    
+    if not job_skill_list:
+        return [], []
+    
+    matched = []
+    missing = []
+    
+    for skill in job_skill_list:
+        found = False
+        for candidate_skill in candidate_list:
+            if skill in candidate_skill or candidate_skill in skill:
+                matched.append(skill)
+                found = True
+                break
+        if not found:
+            missing.append(skill)
+    
+    return matched, missing
 
 def rank_candidates(job_id):
     applications = JobApplication.objects.filter(job_id=job_id)
@@ -138,8 +196,6 @@ def rank_candidates(job_id):
 
 def generate_recommendation(scores):
     overall = scores['overall_score']
-    skill = scores['skill_score']
-    experience = scores['experience_score']
     
     if overall >= 85:
         return "Highly Recommended - Excellent match for this position"

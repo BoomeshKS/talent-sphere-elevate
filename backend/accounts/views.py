@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from .models import UserProfile, Job, JobApplication
 from .resume_parser import parse_resume
-from .matching_engine import calculate_match_score, rank_candidates, auto_rank_and_update
+from .matching_engine import calculate_match_score, get_experience_range, rank_candidates, auto_rank_and_update, get_matched_and_missing_skills, generate_recommendation
 
 
 def register(request):
@@ -174,12 +174,23 @@ def job_detail(request, job_id):
     job = get_object_or_404(Job, id=job_id)
     
     has_applied = False
+    matched_skills = []
+    missing_skills = []
+    
     if request.user.profile.role == 'candidate':
         has_applied = JobApplication.objects.filter(job=job, candidate=request.user).exists()
+        
+        profile = request.user.profile
+        if profile.skills:
+            matched_skills, missing_skills = get_matched_and_missing_skills(profile.skills, job)
     
     return render(request, 'accounts/job_detail.html', {
         'job': job,
-        'has_applied': has_applied
+        'has_applied': has_applied,
+        'recruiter_name': job.created_by.username,
+        'matched_skills': matched_skills,
+        'missing_skills': missing_skills,
+        'experience_range': get_experience_range(job.experience_level)
     })
 
 @login_required
@@ -378,7 +389,8 @@ def analyze_application(request, application_id):
     
     return render(request, 'accounts/application_analysis.html', {
         'application': application,
-        'scores': scores
+        'scores': scores,
+        'experience_range': get_experience_range(application.job.experience_level)
     })
 
 
@@ -520,8 +532,6 @@ def update_resume_data(request):
         return redirect('view_resume')
     
     return redirect('view_resume')
-
-
 
 
 def generate_recommendation(scores):
