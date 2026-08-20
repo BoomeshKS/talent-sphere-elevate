@@ -106,3 +106,64 @@ class JobApplication(models.Model):
     
     def __str__(self):
         return f"{self.candidate.username} - {self.job.title}"
+
+
+
+class Interview(models.Model):
+    INTERVIEW_MODES = (
+        ('online', 'Online - Video Call'),
+        ('offline', 'Offline - In Person'),
+        ('phone', 'Phone Call'),
+    )
+    
+    INTERVIEW_ROUNDS = (
+        ('round1', 'Round 1 - Screening'),
+        ('round2', 'Round 2 - Technical'),
+        ('round3', 'Round 3 - Managerial'),
+        ('round4', 'Round 4 - HR'),
+        ('round5', 'Final Round'),
+    )
+    
+    INTERVIEW_STATUS = (
+        ('scheduled', 'Scheduled'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+        ('rescheduled', 'Rescheduled'),
+        ('no_show', 'No Show'),
+    )
+    
+    job_application = models.ForeignKey(JobApplication, on_delete=models.CASCADE, related_name='interviews')
+    recruiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conducted_interviews')
+    candidate = models.ForeignKey(User, on_delete=models.CASCADE, related_name='candidate_interviews')
+    
+    interview_round = models.CharField(max_length=20, choices=INTERVIEW_ROUNDS, default='round1')
+    interview_mode = models.CharField(max_length=20, choices=INTERVIEW_MODES, default='online')
+    
+    scheduled_date = models.DateField()
+    scheduled_time = models.TimeField()
+    duration_minutes = models.IntegerField(default=60)
+    
+    meeting_link = models.URLField(blank=True, null=True)
+    location = models.CharField(max_length=200, blank=True, null=True)
+    
+    status = models.CharField(max_length=20, choices=INTERVIEW_STATUS, default='scheduled')
+    
+    feedback = models.TextField(blank=True, null=True)
+    feedback_score = models.IntegerField(null=True, blank=True, help_text="Score out of 10")
+    feedback_submitted_at = models.DateTimeField(blank=True, null=True)
+    
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['scheduled_date', 'scheduled_time']
+    
+    def __str__(self):
+        return f"{self.candidate.username} - {self.job_application.job.title} - {self.get_interview_round_display()}"
+    
+    def is_upcoming(self):
+        from datetime import datetime, date
+        from django.utils import timezone
+        interview_datetime = datetime.combine(self.scheduled_date, self.scheduled_time)
+        return interview_datetime > timezone.now() and self.status == 'scheduled'

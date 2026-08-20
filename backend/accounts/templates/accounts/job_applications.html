@@ -1,4 +1,5 @@
 {% extends 'accounts/base.html' %}
+{% load custom_filters %}
 
 {% block title %}Job Applications{% endblock %}
 
@@ -12,6 +13,15 @@
             Back to My Jobs
         </a>
         <span style="margin-left: 15px;">Total Applications: <strong>{{ applications.count }}</strong></span>
+        <a href="{% url 'rank_job_applications' job.id %}" style="margin-left: 15px; background-color: #17a2b8; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            AI Ranking
+        </a>
+        <a href="{% url 'bulk_analyze_applications' job.id %}" style="margin-left: 10px; background-color: #007bff; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Bulk Analyze
+        </a>
+        <a href="{% url 'my_interviews' %}" style="margin-left: 10px; background-color: #ffc107; color: #333; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            My Interviews
+        </a>
     </div>
     
     {% if applications %}
@@ -22,9 +32,9 @@
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Candidate</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Email</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Applied Date</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">AI Match</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Status</th>
                     <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
-                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">AI Match</th>
                 </tr>
             </thead>
             <tbody>
@@ -36,56 +46,7 @@
                     </td>
                     <td style="border: 1px solid #ddd; padding: 10px;">{{ application.candidate.email }}</td>
                     <td style="border: 1px solid #ddd; padding: 10px;">{{ application.applied_at|date:"M d, Y H:i" }}</td>
-                    <td style="border: 1px solid #ddd; padding: 10px;">
-                        <span style="background-color: 
-                            {% if application.status == 'pending' %}#ffc107
-                            {% elif application.status == 'reviewed' %}#17a2b8
-                            {% elif application.status == 'shortlisted' %}#28a745
-                            {% elif application.status == 'interview' %}#007bff
-                            {% elif application.status == 'accepted' %}#28a745
-                            {% else %}#dc3545{% endif %}; 
-                            color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
-                            {{ application.get_status_display }}
-                        </span>
-                    </td>
-                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
-                        <form method="POST" action="{% url 'update_application_status' application.id %}" style="display: inline;">
-                            {% csrf_token %}
-                            <select name="status" style="padding: 5px;">
-                                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
-                                <option value="reviewed" {% if application.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
-                                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
-                                <option value="interview" {% if application.status == 'interview' %}selected{% endif %}>Interview</option>
-                                <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
-                                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
-                            </select>
-                            <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">
-                                Update
-                            </button>
-                        </form>
-                        <br>
-                        <button onclick="toggleNotes('notes_{{ application.id }}')" style="background-color: #6c757d; color: white; border: none; padding: 3px 10px; cursor: pointer; border-radius: 3px; margin-top: 5px; font-size: 12px;">
-                            Notes
-                        </button>
-                        <div id="notes_{{ application.id }}" style="display: none; margin-top: 5px; text-align: left;">
-                            {% if application.notes %}
-                                <p style="background-color: #f8f9fa; padding: 5px; font-size: 12px; margin: 0;">
-                                    {{ application.notes }}
-                                </p>
-                            {% else %}
-                                <p style="color: #6c757d; font-size: 12px; margin: 0;">No notes added</p>
-                            {% endif %}
-                            <form method="POST" action="{% url 'update_application_status' application.id %}" style="margin-top: 5px;">
-                                {% csrf_token %}
-                                <input type="hidden" name="status" value="{{ application.status }}">
-                                <input type="text" name="notes" placeholder="Add notes..." style="width: 100%; padding: 5px; font-size: 12px;">
-                                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 3px 10px; cursor: pointer; border-radius: 3px; font-size: 12px; margin-top: 3px;">
-                                    Save Note
-                                </button>
-                            </form>
-                        </div>
-                    </td>
-
+                    
                     <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
                         {% if application.match_score %}
                             <span style="background-color: 
@@ -105,6 +66,84 @@
                             </a>
                         {% endif %}
                     </td>
+                    
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <span style="background-color: 
+                            {% if application.status == 'pending' %}#ffc107
+                            {% elif application.status == 'reviewed' %}#17a2b8
+                            {% elif application.status == 'shortlisted' %}#28a745
+                            {% elif application.status == 'interview' %}#007bff
+                            {% elif application.status == 'accepted' %}#28a745
+                            {% else %}#dc3545{% endif %}; 
+                            color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                            {{ application.get_status_display }}
+                        </span>
+                    </td>
+                    
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <!-- Status Update Form -->
+                        <form method="POST" action="{% url 'update_application_status' application.id %}" style="display: inline-block; margin-bottom: 5px;">
+                            {% csrf_token %}
+                            <select name="status" style="padding: 5px; font-size: 12px;">
+                                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                                <option value="reviewed" {% if application.status == 'reviewed' %}selected{% endif %}>Reviewed</option>
+                                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                                <option value="interview" {% if application.status == 'interview' %}selected{% endif %}>Interview</option>
+                                <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                            </select>
+                            <button type="submit" style="background-color: #007bff; color: white; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px; font-size: 12px;">
+                                Update
+                            </button>
+                        </form>
+                        
+                        <!-- Schedule Interview Button - Only for shortlisted candidates -->
+                        {% if application.status == 'shortlisted' %}
+                            <br>
+                            <a href="{% url 'schedule_interview' application.id %}" style="background-color: #28a745; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px; display: inline-block; margin-top: 3px;">
+                                Schedule Interview
+                            </a>
+                        {% endif %}
+                        
+                        <!-- View Interview Button - For interview status -->
+                        {% if application.status == 'interview' %}
+                            <br>
+                            <a href="{% url 'my_interviews' %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px; display: inline-block; margin-top: 3px;">
+                                View Interviews
+                            </a>
+                        {% endif %}
+                        
+                        <!-- Notes Button -->
+                        <br>
+                        <button onclick="toggleNotes('notes_{{ application.id }}')" style="background-color: #6c757d; color: white; border: none; padding: 3px 10px; cursor: pointer; border-radius: 3px; margin-top: 3px; font-size: 12px;">
+                            Notes
+                        </button>
+                        
+                        <!-- Notes Div -->
+                        <div id="notes_{{ application.id }}" style="display: none; margin-top: 5px; text-align: left;">
+                            {% if application.notes %}
+                                <p style="background-color: #f8f9fa; padding: 5px; font-size: 12px; margin: 0;">
+                                    {{ application.notes }}
+                                </p>
+                            {% else %}
+                                <p style="color: #6c757d; font-size: 12px; margin: 0;">No notes added</p>
+                            {% endif %}
+                            <form method="POST" action="{% url 'update_application_status' application.id %}" style="margin-top: 5px;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="{{ application.status }}">
+                                <input type="text" name="notes" placeholder="Add notes..." style="width: 100%; padding: 5px; font-size: 12px;">
+                                <button type="submit" style="background-color: #28a745; color: white; border: none; padding: 3px 10px; cursor: pointer; border-radius: 3px; font-size: 12px; margin-top: 3px;">
+                                    Save Note
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Resume Link -->
+                        <br>
+                        <a href="{% url 'application_resume' application.id %}" style="background-color: #17a2b8; color: white; padding: 3px 10px; text-decoration: none; border-radius: 3px; font-size: 12px; display: inline-block; margin-top: 3px;">
+                            Resume
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -116,8 +155,21 @@
             <table width="100%">
                 <tr>
                     <td><strong>Total Applications:</strong> {{ applications.count }}</td>
-                    <td><strong>Pending:</strong> {{ applications|dictsort:"status"|length }}</td>
-                    <td><strong>Shortlisted:</strong> {{ applications|length }}</td>
+                    <td><strong>Pending:</strong> 
+                        {% with pending=applications|dictsort:"status" %}
+                            {{ pending|length }}
+                        {% endwith %}
+                    </td>
+                    <td><strong>Shortlisted:</strong> 
+                        {% with shortlisted=applications|dictsort:"status" %}
+                            {{ shortlisted|length }}
+                        {% endwith %}
+                    </td>
+                    <td><strong>Interview:</strong> 
+                        {% with interview=applications|dictsort:"status" %}
+                            {{ interview|length }}
+                        {% endwith %}
+                    </td>
                 </tr>
             </table>
         </div>

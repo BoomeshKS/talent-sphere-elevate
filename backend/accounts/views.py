@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
-from .models import UserProfile, Job, JobApplication
+from .models import UserProfile, Job, JobApplication, Interview
 from .resume_parser import parse_resume
 from .matching_engine import calculate_match_score, get_experience_range, rank_candidates, auto_rank_and_update, get_matched_and_missing_skills, generate_recommendation
 
@@ -547,3 +547,230 @@ def generate_recommendation(scores):
         return "Average Match - May need additional training"
     else:
         return "Not Recommended - Low match score"
+
+
+
+
+
+# Interview Parts
+
+
+@login_required
+def schedule_interview(request, application_id):
+    """Schedule an interview for a candidate"""
+    application = get_object_or_404(JobApplication, id=application_id)
+    
+    if application.job.created_by != request.user:
+        messages.error(request, 'You are not authorized to schedule interviews for this job!')
+        return redirect('dashboard')
+    
+    if application.status not in ['shortlisted', 'interview']:
+        messages.error(request, 'This candidate must be shortlisted first!')
+        return redirect('job_applications', job_id=application.job.id)
+    
+    if request.method == 'POST':
+        interview_round = request.POST.get('interview_round')
+        interview_mode = request.POST.get('interview_mode')
+        scheduled_date = request.POST.get('scheduled_date')
+        scheduled_time = request.POST.get('scheduled_time')
+        duration_minutes = request.POST.get('duration_minutes', 60)
+        meeting_link = request.POST.get('meeting_link', '')
+        location = request.POST.get('location', '')
+        notes = request.POST.get('notes', '')
+        
+        if not scheduled_date or not scheduled_time:
+            messages.error(request, 'Please select date and time for the interview!')
+            return render(request, 'accounts/schedule_interview.html', {'application': application})
+        
+        try:
+            interview = Interview.objects.create(
+                job_application=application,
+                recruiter=request.user,
+                candidate=application.candidate,
+                interview_round=interview_round,
+                interview_mode=interview_mode,
+                scheduled_date=scheduled_date,
+                scheduled_time=scheduled_time,
+                duration_minutes=int(duration_minutes),
+                meeting_link=meeting_link,
+                location=location,
+                notes=notes,
+                status='scheduled'
+            )
+            
+            application.status = 'interview'
+            application.save()
+            
+            messages.success(request, f'Interview scheduled successfully for {application.candidate.username}!')
+            return redirect('interview_detail', interview_id=interview.id)
+        except Exception as e:
+            messages.error(request, f'Error scheduling interview: {str(e)}')
+    
+    return render(request, 'accounts/schedule_interview.html', {'application': application})
+
+
+@login_required
+def interview_detail(request, interview_id):
+    """View interview details"""
+    interview = get_object_or_404(Interview, id=interview_id)
+    
+    if request.user != interview.recruiter and request.user != interview.candidate:
+        messages.error(request, 'You are not authorized to view this interview!')
+        return redirect('dashboard')
+    
+    return render(request, 'accounts/interview_detail.html', {'interview': interview})
+
+
+@login_required
+def my_interviews(request):
+    """View all interviews for the logged-in user"""
+    user = request.user
+    
+    if user.profile.role == 'recruiter':
+        interviews = Interview.objects.filter(recruiter=user)
+        title = 'My Scheduled Interviews (Recruiter)'
+    else:
+        interviews = Interview.objects.filter(candidate=user)
+        title = 'My Interviews (Candidate)'
+    
+    upcoming = interviews.filter(status='scheduled').order_by('scheduled_date', 'scheduled_time')
+    completed = interviews.filter(status='completed').order_by('-scheduled_date')
+    cancelled = interviews.filter(status='cancelled').order_by('-scheduled_date')
+    
+    return render(request, 'accounts/my_interviews.html', {
+        'interviews': interviews,
+        'upcoming': upcoming,
+        'completed': completed,
+        'cancelled': cancelled,
+        'title': title
+    })
+
+
+@login_required
+def update_interview_status(request, interview_id):
+    """Update interview status (completed, cancelled, rescheduled)"""
+    interview = get_object_or_404(Interview, id=interview_id)
+    
+    if interview.recruiter != request.user:
+        messages.error(request, 'You are not authorized to update this interview!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        feedback = request.POST.get('feedback', '')
+        feedback_score = request.POST.get('feedback_score', '')
+        
+        if status:
+            interview.status = status
+            
+            if status == 'completed' and feedback:
+                interview.feedback = feedback
+                if feedback_score:
+                    try:
+                        interview.feedback_score = int(feedback_score)
+                    except:
+                        pass
+                interview.feedback_submitted_at = timezone.now()
+                
+                application = interview.job_application
+                if feedback_score and int(feedback_score) >= 7:
+                    application.status = 'shortlisted'
+                else:
+                    application.status = 'reviewed'
+                application.save()
+            
+            interview.save()
+            messages.success(request, f'Interview status updated to {interview.get_status_display()}')
+        
+        return redirect('interview_detail', interview_id=interview.id)
+    
+    return redirect('interview_detail', interview_id=interview.id)
+
+
+@login_required
+def submit_interview_feedback(request, interview_id):
+    """Submit feedback for an interview"""
+    interview = get_object_or_404(Interview, id=interview_id)
+    
+    if interview.recruiter != request.user:
+        messages.error(request, 'You are not authorized to submit feedback for this interview!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        feedback = request.POST.get('feedback')
+        feedback_score = request.POST.get('feedback_score')
+        
+        if not feedback:
+            messages.error(request, 'Please provide feedback!')
+            return render(request, 'accounts/interview_feedback.html', {'interview': interview})
+        
+        interview.feedback = feedback
+        if feedback_score:
+            try:
+                interview.feedback_score = int(feedback_score)
+            except:
+                pass
+        interview.status = 'completed'
+        interview.feedback_submitted_at = timezone.now()
+        interview.save()
+        
+        application = interview.job_application
+        if feedback_score and int(feedback_score) >= 7:
+            application.status = 'shortlisted'
+        else:
+            application.status = 'reviewed'
+        application.save()
+        
+        messages.success(request, 'Feedback submitted successfully!')
+        return redirect('interview_detail', interview_id=interview.id)
+    
+    return render(request, 'accounts/interview_feedback.html', {'interview': interview})
+
+
+@login_required
+def reschedule_interview(request, interview_id):
+    """Reschedule an interview"""
+    interview = get_object_or_404(Interview, id=interview_id)
+    
+    if interview.recruiter != request.user:
+        messages.error(request, 'You are not authorized to reschedule this interview!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        scheduled_date = request.POST.get('scheduled_date')
+        scheduled_time = request.POST.get('scheduled_time')
+        
+        if not scheduled_date or not scheduled_time:
+            messages.error(request, 'Please select new date and time!')
+            return render(request, 'accounts/reschedule_interview.html', {'interview': interview})
+        
+        interview.scheduled_date = scheduled_date
+        interview.scheduled_time = scheduled_time
+        interview.status = 'rescheduled'
+        interview.save()
+        
+        messages.success(request, 'Interview rescheduled successfully!')
+        return redirect('interview_detail', interview_id=interview.id)
+    
+    return render(request, 'accounts/reschedule_interview.html', {'interview': interview})
+
+
+@login_required
+def cancel_interview(request, interview_id):
+    """Cancel an interview"""
+    interview = get_object_or_404(Interview, id=interview_id)
+    
+    if interview.recruiter != request.user:
+        messages.error(request, 'You are not authorized to cancel this interview!')
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        reason = request.POST.get('reason', '')
+        interview.status = 'cancelled'
+        interview.notes = f"Cancelled. Reason: {reason}" if reason else "Cancelled"
+        interview.save()
+        
+        messages.success(request, 'Interview cancelled successfully!')
+        return redirect('my_interviews')
+    
+    return render(request, 'accounts/cancel_interview.html', {'interview': interview})

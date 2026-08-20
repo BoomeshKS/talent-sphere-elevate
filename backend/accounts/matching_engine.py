@@ -17,7 +17,7 @@ def calculate_match_score(application):
     
     overall_score = (
         skill_score * 0.60 +
-        experience_score * 0.40
+        experience_score * 0.40 
     )
     
     overall_score = int(round(overall_score))
@@ -28,6 +28,7 @@ def calculate_match_score(application):
         'experience_score': int(round(experience_score)),
         'keyword_score': int(round(skill_score))
     }
+
 
 def calculate_skill_match(candidate_skills, job_skills, job_requirements, job_description):
     if not candidate_skills:

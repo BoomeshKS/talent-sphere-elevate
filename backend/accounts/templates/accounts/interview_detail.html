@@ -1,0 +1,112 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Interview Details{% endblock %}
+
+{% block content %}
+    <h2>Interview Details</h2>
+    <hr>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>{{ interview.job_application.job.title }}</h3>
+        <p><strong>Company:</strong> {{ interview.job_application.job.company }}</p>
+        <p><strong>Candidate:</strong> {{ interview.candidate.username }}</p>
+        <p><strong>Recruiter:</strong> {{ interview.recruiter.username }}</p>
+    </div>
+    
+    <table width="100%" cellpadding="10">
+        <tr>
+            <td width="30%"><strong>Interview Round:</strong></td>
+            <td>
+                <span style="background-color: #007bff; color: white; padding: 3px 10px; border-radius: 12px;">
+                    {{ interview.get_interview_round_display }}
+                </span>
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Mode:</strong></td>
+            <td>{{ interview.get_interview_mode_display }}</td>
+        </tr>
+        <tr>
+            <td><strong>Date & Time:</strong></td>
+            <td>{{ interview.scheduled_date|date:"F d, Y" }} at {{ interview.scheduled_time|time:"h:i A" }}</td>
+        </tr>
+        <tr>
+            <td><strong>Duration:</strong></td>
+            <td>{{ interview.duration_minutes }} minutes</td>
+        </tr>
+        <tr>
+            <td><strong>Status:</strong></td>
+            <td>
+                <span style="background-color: 
+                    {% if interview.status == 'scheduled' %}#28a745
+                    {% elif interview.status == 'completed' %}#007bff
+                    {% elif interview.status == 'cancelled' %}#dc3545
+                    {% elif interview.status == 'rescheduled' %}#ffc107
+                    {% else %}#6c757d{% endif %}; 
+                    color: white; padding: 3px 10px; border-radius: 12px;">
+                    {{ interview.get_status_display }}
+                </span>
+            </td>
+        </tr>
+        {% if interview.meeting_link %}
+        <tr>
+            <td><strong>Meeting Link:</strong></td>
+            <td><a href="{{ interview.meeting_link }}" target="_blank">{{ interview.meeting_link }}</a></td>
+        </tr>
+        {% endif %}
+        {% if interview.location %}
+        <tr>
+            <td><strong>Location:</strong></td>
+            <td>{{ interview.location }}</td>
+        </tr>
+        {% endif %}
+        {% if interview.notes %}
+        <tr>
+            <td><strong>Notes:</strong></td>
+            <td>{{ interview.notes }}</td>
+        </tr>
+        {% endif %}
+        {% if interview.feedback %}
+        <tr>
+            <td><strong>Feedback:</strong></td>
+            <td>{{ interview.feedback }}</td>
+        </tr>
+        <tr>
+            <td><strong>Feedback Score:</strong></td>
+            <td>
+                <span style="background-color: 
+                    {% if interview.feedback_score >= 8 %}#28a745
+                    {% elif interview.feedback_score >= 5 %}#ffc107
+                    {% else %}#dc3545{% endif %}; 
+                    color: white; padding: 3px 10px; border-radius: 12px;">
+                    {{ interview.feedback_score }}/10
+                </span>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+    
+    <br>
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'my_interviews' %}" style="background-color: #6c757d; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+            Back to Interviews
+        </a>
+        {% if user == interview.recruiter and interview.status == 'scheduled' %}
+            <a href="{% url 'reschedule_interview' interview.id %}" style="background-color: #ffc107; color: #333; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+                Reschedule
+            </a>
+            <a href="{% url 'submit_interview_feedback' interview.id %}" style="background-color: #28a745; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+                Submit Feedback
+            </a>
+            <a href="{% url 'cancel_interview' interview.id %}" style="background-color: #dc3545; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+                Cancel
+            </a>
+        {% endif %}
+        {% if user == interview.candidate and interview.status == 'scheduled' %}
+            <a href="{% url 'cancel_interview' interview.id %}" style="background-color: #dc3545; color: white; padding: 8px 20px; text-decoration: none; border-radius: 3px;">
+                Request Cancellation
+            </a>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}My Interviews{% endblock %}
+
+{% block content %}
+    <h2>{{ title }}</h2>
+    <hr>
+    
+    <h3>Upcoming Interviews</h3>
+    {% if upcoming %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Candidate/Recruiter</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Round</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Date & Time</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for interview in upcoming %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ interview.job_application.job.title }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        {% if user.profile.role == 'recruiter' %}
+                            {{ interview.candidate.username }}
+                        {% else %}
+                            {{ interview.recruiter.username }}
+                        {% endif %}
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        <span style="background-color: #007bff; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px;">
+                            {{ interview.get_interview_round_display }}
+                        </span>
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        {{ interview.scheduled_date|date:"M d, Y" }}<br>
+                        {{ interview.scheduled_time|time:"h:i A" }}
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <a href="{% url 'interview_detail' interview.id %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p style="text-align: center; padding: 20px; color: #6c757d;">No upcoming interviews.</p>
+    {% endif %}
+    
+    <br>
+    
+    <h3>Completed Interviews</h3>
+    {% if completed %}
+        <table width="100%" style="border-collapse: collapse; border: 1px solid #ddd;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Job</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Candidate/Recruiter</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: left;">Date</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Score</th>
+                    <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for interview in completed|slice:":10" %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ interview.job_application.job.title }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">
+                        {% if user.profile.role == 'recruiter' %}
+                            {{ interview.candidate.username }}
+                        {% else %}
+                            {{ interview.recruiter.username }}
+                        {% endif %}
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px;">{{ interview.scheduled_date|date:"M d, Y" }}</td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        {% if interview.feedback_score %}
+                            <span style="background-color: 
+                                {% if interview.feedback_score >= 8 %}#28a745
+                                {% elif interview.feedback_score >= 5 %}#ffc107
+                                {% else %}#dc3545{% endif %}; 
+                                color: white; padding: 3px 10px; border-radius: 12px;">
+                                {{ interview.feedback_score }}/10
+                            </span>
+                        {% else %}
+                            <span style="color: #6c757d;">Pending</span>
+                        {% endif %}
+                    </td>
+                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">
+                        <a href="{% url 'interview_detail' interview.id %}" style="background-color: #007bff; color: white; padding: 5px 15px; text-decoration: none; border-radius: 3px; font-size: 12px;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if completed.count > 10 %}
+            <p style="text-align: center; margin-top: 10px;">
+                <small>Showing 10 of {{ completed.count }} completed interviews</small>
+            </p>
+        {% endif %}
+    {% else %}
+        <p style="text-align: center; padding: 20px; color: #6c757d;">No completed interviews.</p>
+    {% endif %}
+    
+    <br>
+    <a href="{% url 'dashboard' %}">Back to Dashboard</a>
+{% endblock %}

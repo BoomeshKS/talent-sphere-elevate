@@ -25,4 +25,14 @@ urlpatterns = [
     path('job-recommendations/', views.job_recommendations, name='job_recommendations'),
     
     path('update-resume-data/', views.update_resume_data, name='update_resume_data'),
+
+
+
+    path('schedule-interview/<int:application_id>/', views.schedule_interview, name='schedule_interview'),
+    path('interview/<int:interview_id>/', views.interview_detail, name='interview_detail'),
+    path('my-interviews/', views.my_interviews, name='my_interviews'),
+    path('interview/<int:interview_id>/update-status/', views.update_interview_status, name='update_interview_status'),
+    path('interview/<int:interview_id>/feedback/', views.submit_interview_feedback, name='submit_interview_feedback'),
+    path('interview/<int:interview_id>/reschedule/', views.reschedule_interview, name='reschedule_interview'),
+    path('interview/<int:interview_id>/cancel/', views.cancel_interview, name='cancel_interview'),
 ]

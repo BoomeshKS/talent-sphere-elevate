@@ -1,0 +1,43 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Cancel Interview{% endblock %}
+
+{% block content %}
+    <h2>Cancel Interview</h2>
+    <hr>
+    
+    <div style="background-color: #f8d7da; padding: 15px; border: 1px solid #f5c6cb; border-radius: 5px; margin-bottom: 20px;">
+        <p style="color: #721c24; margin: 0;">
+            <strong>Warning:</strong> Are you sure you want to cancel this interview?
+        </p>
+    </div>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <p><strong>Candidate:</strong> {{ interview.candidate.username }}</p>
+        <p><strong>Job:</strong> {{ interview.job_application.job.title }}</p>
+        <p><strong>Date & Time:</strong> {{ interview.scheduled_date|date:"F d, Y" }} at {{ interview.scheduled_time|time:"h:i A" }}</p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table width="100%" cellpadding="8">
+            <tr>
+                <td width="25%"><label><strong>Reason for cancellation:</strong></label></td>
+                <td width="75%">
+                    <textarea name="reason" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;" 
+                              placeholder="Please provide a reason for cancellation..."></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center" style="padding-top: 15px;">
+                    <button type="submit" style="background-color: #dc3545; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
+                        Confirm Cancellation
+                    </button>
+                    <a href="{% url 'interview_detail' interview.id %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
+                        Go Back
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

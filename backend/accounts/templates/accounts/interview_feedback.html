@@ -1,0 +1,56 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Submit Interview Feedback{% endblock %}
+
+{% block content %}
+    <h2>Submit Interview Feedback</h2>
+    <hr>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>{{ interview.candidate.username }}</h3>
+        <p><strong>Job:</strong> {{ interview.job_application.job.title }}</p>
+        <p><strong>Round:</strong> {{ interview.get_interview_round_display }}</p>
+        <p><strong>Date:</strong> {{ interview.scheduled_date|date:"F d, Y" }}</p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table width="100%" cellpadding="8">
+            <tr>
+                <td width="25%"><label><strong>Feedback:</strong></label></td>
+                <td width="75%">
+                    <textarea name="feedback" required rows="6" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;" 
+                              placeholder="Provide detailed feedback about the candidate's performance..."></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Score (1-10):</strong></label></td>
+                <td>
+                    <select name="feedback_score" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                        <option value="">Select Score</option>
+                        <option value="1">1 - Very Poor</option>
+                        <option value="2">2 - Poor</option>
+                        <option value="3">3 - Below Average</option>
+                        <option value="4">4 - Average</option>
+                        <option value="5">5 - Good</option>
+                        <option value="6">6 - Very Good</option>
+                        <option value="7">7 - Great</option>
+                        <option value="8">8 - Excellent</option>
+                        <option value="9">9 - Outstanding</option>
+                        <option value="10">10 - Perfect</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center" style="padding-top: 15px;">
+                    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
+                        Submit Feedback
+                    </button>
+                    <a href="{% url 'interview_detail' interview.id %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
+                        Cancel
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

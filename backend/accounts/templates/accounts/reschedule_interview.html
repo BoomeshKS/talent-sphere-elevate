@@ -1,0 +1,42 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Reschedule Interview{% endblock %}
+
+{% block content %}
+    <h2>Reschedule Interview</h2>
+    <hr>
+    
+    <div style="background-color: #fff3cd; padding: 15px; border: 1px solid #ffeaa7; border-radius: 5px; margin-bottom: 20px;">
+        <p style="color: #856404; margin: 0;">
+            <strong>Current Schedule:</strong> {{ interview.scheduled_date|date:"F d, Y" }} at {{ interview.scheduled_time|time:"h:i A" }}
+        </p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table width="100%" cellpadding="8">
+            <tr>
+                <td width="25%"><label><strong>New Date:</strong></label></td>
+                <td width="75%">
+                    <input type="date" name="scheduled_date" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>New Time:</strong></label></td>
+                <td>
+                    <input type="time" name="scheduled_time" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center" style="padding-top: 15px;">
+                    <button type="submit" style="background-color: #ffc107; color: #333; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
+                        Reschedule Interview
+                    </button>
+                    <a href="{% url 'interview_detail' interview.id %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
+                        Cancel
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}

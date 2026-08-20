@@ -1,0 +1,98 @@
+{% extends 'accounts/base.html' %}
+
+{% block title %}Schedule Interview{% endblock %}
+
+{% block content %}
+    <h2>Schedule Interview</h2>
+    <hr>
+    
+    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>Candidate: {{ application.candidate.username }}</h3>
+        <p><strong>Email:</strong> {{ application.candidate.email }}</p>
+        <p><strong>Job:</strong> {{ application.job.title }}</p>
+        <p><strong>Company:</strong> {{ application.job.company }}</p>
+        <p><strong>Current Status:</strong> {{ application.get_status_display }}</p>
+    </div>
+    
+    <form method="POST">
+        {% csrf_token %}
+        <table width="100%" cellpadding="8">
+            <tr>
+                <td width="25%"><label><strong>Interview Round:</strong></label></td>
+                <td width="75%">
+                    <select name="interview_round" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                        <option value="round1">Round 1 - Screening</option>
+                        <option value="round2">Round 2 - Technical</option>
+                        <option value="round3">Round 3 - Managerial</option>
+                        <option value="round4">Round 4 - HR</option>
+                        <option value="round5">Final Round</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Interview Mode:</strong></label></td>
+                <td>
+                    <select name="interview_mode" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                        <option value="online">Online - Video Call</option>
+                        <option value="offline">Offline - In Person</option>
+                        <option value="phone">Phone Call</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Date:</strong></label></td>
+                <td>
+                    <input type="date" name="scheduled_date" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Time:</strong></label></td>
+                <td>
+                    <input type="time" name="scheduled_time" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Duration (minutes):</strong></label></td>
+                <td>
+                    <select name="duration_minutes" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                        <option value="30">30 minutes</option>
+                        <option value="45">45 minutes</option>
+                        <option value="60" selected>60 minutes</option>
+                        <option value="90">90 minutes</option>
+                        <option value="120">120 minutes</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Meeting Link:</strong></label></td>
+                <td>
+                    <input type="url" name="meeting_link" placeholder="https://meet.google.com/..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                    <small style="color: #6c757d;">For online interviews only</small>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Location:</strong></label></td>
+                <td>
+                    <input type="text" name="location" placeholder="Office address / Meeting room" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+                    <small style="color: #6c757d;">For offline interviews only</small>
+                </td>
+            </tr>
+            <tr>
+                <td><label><strong>Notes:</strong></label></td>
+                <td>
+                    <textarea name="notes" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 3px;" placeholder="Additional instructions or notes..."></textarea>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center" style="padding-top: 15px;">
+                    <button type="submit" style="background-color: #28a745; color: white; padding: 10px 40px; border: none; cursor: pointer; font-size: 16px; border-radius: 5px;">
+                        Schedule Interview
+                    </button>
+                    <a href="{% url 'job_applications' application.job.id %}" style="margin-left: 10px; padding: 10px 40px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 5px;">
+                        Cancel
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </form>
+{% endblock %}
